@@ -205,7 +205,7 @@ namespace Objects
         }
         internal void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
-            string pgs = string.Format("Downloaded Completed: {0}", DateTime.Now);
+            string pgs = string.Format("Download Completed: {0}", DateTime.Now);
             if (event_ApiBytesDownloaded != null)
             {
                 IExEvents exe = new IExEvents();
