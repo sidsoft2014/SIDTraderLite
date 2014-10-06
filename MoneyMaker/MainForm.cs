@@ -450,7 +450,8 @@ namespace Objects
             if (dataGridView_OrderBookBids.RowCount > 0)
             {
                 ///First get price of top bid incase no other price is set
-                double prc = Convert.ToDouble(dataGridView_OrderBookBids.Rows[0].Cells[0].Value);
+                decimal prc;
+                Decimal.TryParse(dataGridView_OrderBookBids.Rows[0].Cells[0].Value.ToString(), out prc);
 
                 ///As this is a check on selling all the commodity, the quantity
                 ///is simply the balance available for the commodity
@@ -458,15 +459,18 @@ namespace Objects
 
                 ///Check if a price has been set in text box
                 ///and if so switch the price to this one
-                if (!String.IsNullOrEmpty(textBox_SellPrice.Text.Trim()))
-                    prc = Convert.ToDouble(textBox_SellPrice.Text);
+                if (textBox_SellPrice.Value > 0)
+                    prc = textBox_SellPrice.Value;
 
                 /// Check both price and quantity are above 0 to prevent errors
                 if (prc > 0 && quant > 0)
                 {
                     ///Run the calculator
-                    decimal? fee;
-                    double total = Convert.ToDouble(Calcs.Sell_HowMuch(Convert.ToDecimal(quant), 0.25M, Convert.ToDecimal(prc), out fee));
+                    decimal fee;
+                    var feePct = ActiveMarket.GetFee(quant);
+                    double total;
+
+                    total = Convert.ToDouble(Calcs.Sell_HowMuch(Convert.ToDecimal(quant), feePct, Convert.ToDecimal(prc), out fee));
 
                     ///Set the textboxes to new values
                     textBox_SellPrice.Text = prc.ToString("N8");
@@ -483,26 +487,35 @@ namespace Objects
                 ///First check if user has set a price,
                 ///if not grab best price from asks order book.                
                 decimal prc;
-                if (!String.IsNullOrEmpty(textBox_BuyPrice.Text.Trim()))
-                    prc = Convert.ToDecimal(textBox_BuyPrice.Text);
+                if (textBox_BuyPrice.Value > 0)
+                    prc = textBox_BuyPrice.Value;
                 else
-                    prc = Convert.ToDecimal(dataGridView_OrderBookAsks.Rows[0].Cells[0].Value);
+                    prc = Convert.ToDecimal(dataGridView_OrderBookAsks.Rows[0].Cells[1].Value);
 
-                ///Check price is above 0 to prevent divide by zero errors
                 if (prc > 0)
                 {
-                    ///Calculate maximum volume
-                    decimal quant = Calcs.Buy_HowMany(Convert.ToDecimal(currencyBalance), 100M, 0.25M, prc);
+                    decimal bal = Convert.ToDecimal(currencyBalance);
+                    double apxAmt = Convert.ToDouble(bal / prc);
 
-                    ///Calculate total cost and fee
-                    decimal? fee;
-                    decimal total = Calcs.Buy_HowMuch(Convert.ToDecimal(quant), 0.25M, prc, out fee);
+                    var feePct = ActiveMarket.GetFee(apxAmt);
+                    ///Check price is above 0 to prevent divide by zero errors
+                    if (prc > 0)
+                    {
+                        decimal quant;
+                        ///Calculate maximum volume
 
-                    ///Set text boxes
-                    textBox_BuyQuant.Value = quant;
-                    textBox_BuyPrice.Value = prc;
-                    textBox_BuyFee.Text = String.Format("{0:N8}", fee);
-                    textBox_BuyTotal.Text = total.ToString("N8");
+                        quant = Calcs.Buy_HowMany(bal, 100M, feePct, prc);
+
+                        ///Calculate total cost and fee
+                        decimal fee;
+                        decimal total = Calcs.Buy_HowMuch(Convert.ToDecimal(quant), 0.25M, prc, out fee);
+
+                        ///Set text boxes
+                        textBox_BuyQuant.Value = quant;
+                        textBox_BuyPrice.Value = prc;
+                        textBox_BuyFee.Text = String.Format("{0:N8}", fee);
+                        textBox_BuyTotal.Text = total.ToString("N8");
+                    }
                 }
             }
         }
@@ -757,18 +770,24 @@ namespace Objects
         }
         private void SetBuyingTotalAndFee(decimal prc, decimal qty)
         {
-            decimal? fee;
+            decimal fee;
             double currentFee = GetCurrentFee(qty);
-            decimal tot = Calcs.Buy_HowMuch(qty, currentFee, prc, out fee);
+            decimal tot = 0;
+
+            tot = Calcs.Buy_HowMuch(qty, currentFee, prc, out fee);
+
             textBox_BuyFee.Text = String.Format("{0:G}", fee);
             textBox_BuyTotal.Text = tot.ToString("G");
         }
         private void SetSellingTotalAndFees(decimal prc, decimal qty)
         {
-            decimal? fee;
+            decimal fee = 0;
             double currentFee = GetCurrentFee(qty);
-            decimal tot = Calcs.Sell_HowMuch(qty, currentFee, prc, out fee);
-            textBox_SellFee.Text = String.Format("{0:G}", fee);
+            decimal tot = 0;
+
+            tot = Calcs.Sell_HowMuch(qty, currentFee, prc, out fee);
+
+            textBox_SellFee.Text = String.Format("{0:G}", (decimal)fee);
             textBox_SellTotal.Text = tot.ToString("G");
         }
         public double GetCurrentFee(dynamic quantity)
@@ -825,7 +844,7 @@ namespace Objects
                     quant = Convert.ToDouble(textBox_BuyQuant.Value);
                     break;
             }
-            string resp = Core.PlaceOrderAsync(basicOrderEnum, price, quant);
+            string resp = Core.PlaceOrderAsync(basicOrderEnum, price, quant)[1];
             UpdateStatusLabel(resp);
 
             ///We are only updating the balance labels here.
@@ -1376,7 +1395,7 @@ namespace Objects
         {
             double quant = Convert.ToDouble(numericUpDown_CondQuant.Value);
             decimal prc = numericUpDown_CondOrderPrice.Value;
-            decimal? fee;
+            decimal fee;
             double currentFee = GetCurrentFee(quant);
             decimal tot = 0;
 

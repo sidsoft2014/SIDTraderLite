@@ -279,10 +279,10 @@ namespace Objects
         /// <param name="Price"></param>
         /// <param name="Quantity"></param>
         /// <returns></returns>
-        public static string PlaceOrderAsync(OrderType Type, double Price, double Quantity)
+        public static string[] PlaceOrderAsync(OrderType Type, double Price, double Quantity)
         {
             ExchangeEnum exName = ActiveMarket.ExchangeName;
-            string result = PlaceOrder(exName, ActiveMarket.MarketIdentity, Type, Price, Quantity);
+            string[] result = PlaceOrder(exName, ActiveMarket.MarketIdentity, Type, Price, Quantity);
             return result;
         }
         public static string CancelOrderAsync(ExchangeEnum exName, string orderId, string marketId)
@@ -871,7 +871,7 @@ namespace Objects
                                 {
                                     ConditionalTrades[input.ExchangeName].Remove(t);
                                     NotifyConditionalOrdersSubscribers();
-                                    PlaceOrder(t.Market.ExchangeName, t.Market, t.Type, t.Price, t.Quantity);
+                                    PlaceOrder(t.Market.ExchangeName, t.Market, t.Type, t.Price, t.Quantity);                                    
                                 }
                             }
                         }
@@ -882,21 +882,6 @@ namespace Objects
         }
 
         /// <summary>
-        /// Internal method for placing an order when only the result message is needed
-        /// </summary>
-        /// <param name="exName"></param>
-        /// <param name="Type"></param>
-        /// <param name="Price"></param>
-        /// <param name="Quantity"></param>
-        /// <returns></returns>
-        private static string PlaceOrder(ExchangeEnum exName, MarketIdentity Identity, OrderType Type, double Price, double Quantity)
-        {
-            string killMe;
-            var result = PlaceOrder(exName, Identity, Type, Price, Quantity, out killMe);
-            killMe = null;
-            return result;
-        }
-        /// <summary>
         /// Internal method for placing an order when result message and order id are needed
         /// </summary>
         /// <param name="exName"></param>
@@ -904,26 +889,63 @@ namespace Objects
         /// <param name="Price"></param>
         /// <param name="Quantity"></param>
         /// <param name="OrderId"></param>
-        /// <returns></returns>
-        private static string PlaceOrder(ExchangeEnum exName, MarketIdentity Identity, OrderType Type, double Price, double Quantity, out string OrderId)
+        /// <returns>Array [OrderId, Message]</returns>
+        private static string[] PlaceOrder(ExchangeEnum exName, MarketIdentity Identity, OrderType Type, double Price, double Quantity)
         {
-            Exchange ex;
-            IExchange ordEx = SwitchExchange(exName, out ex);
+            if (Price * Quantity > 0)
+            {
+                Exchange ex;
+                IExchange ordEx = SwitchExchange(exName, out ex);
 
-            var result = ordEx.PlaceBasicOrder(Identity, Type, Price, Quantity);
-            OrderId = result.Item1;
-            UpdateInfo(exName);
+                var result = ordEx.PlaceBasicOrder(Identity, Type, Price, Quantity);
+                string OrderId = result.Item1;
 
-            NotifyExchangeMessageSubscribers(exName, OrderId);
-            return result.Item2;
+
+                UpdateInfo(exName);
+
+                NotifyExchangeMessageSubscribers(exName, OrderId);
+
+                Task.Factory.StartNew(()=>PostOrderUpdate(Identity.MarketId, ex, ordEx));
+
+                return new string[] { result.Item1, result.Item2 };
+            }
+            else return new string[] { "Error", "Order amounts invalid" };
+        }
+
+        private static void PostOrderUpdate(String MarketId, Exchange ex, IExchange ordEx)
+        {
+            var q = from mkt in ex.Markets
+                    where mkt.MarketIdentity.MarketId == MarketId
+                    select mkt;
+
+            if (q.Count() > 0)
+            {
+                Task t = Task.Run(async () => await Task.Delay(500));
+                Task.WaitAll(t);
+
+                // ordEx.GetSingleMarket(Identity);
+                Market m = q.First();
+                m.OrderBook = ordEx.GetSingleMarketOrders(m.MarketIdentity);
+                m.TradeRecords = ordEx.GetSingleMarketTradeHistory(m.MarketIdentity);
+                NotifyOrderBookSubscribers(m.OrderBook, m.TradeRecords);
+            }
         }
 
         private static string CancelOrder(ExchangeEnum exName, string OrderId, string MarketIdent = null)
         {
-            Exchange ex;
-            IExchange ordEx = SwitchExchange(exName, out ex);
-            string result = ordEx.CancelOrder(OrderId, MarketIdent);
-            UpdateInfo(exName);
+            string result = "No Order To Cancel";
+            if (OrderId != null)
+            {
+                Exchange ex;
+                IExchange ordEx = SwitchExchange(exName, out ex);                
+
+                result = ordEx.CancelOrder(OrderId, MarketIdent);
+
+                UpdateInfo(exName);
+
+                Task.Factory.StartNew(() => PostOrderUpdate(MarketIdent, ex, ordEx));
+
+            }
             return result;
         }
         #endregion

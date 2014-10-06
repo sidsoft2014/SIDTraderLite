@@ -58,9 +58,9 @@ namespace Objects
 
             return ob;
         }
-        public override HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+        public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
         {
-            HashSet<TradeRecord> tr = new HashSet<TradeRecord>();
+            Stack<TradeRecord> tr = new Stack<TradeRecord>();
 
             return tr;
         }

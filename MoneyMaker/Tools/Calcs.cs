@@ -46,7 +46,38 @@ namespace Toolbox
             return total;
             
         }
+        public static decimal Buy_HowMany(dynamic balance, dynamic percent, dynamic fee, dynamic price, out decimal feeAmount)
+        {
+            balance = Convert.ToDecimal(balance);
+            percent = Convert.ToDecimal(percent);
+            price = Convert.ToDecimal(price);
+            fee = Convert.ToDecimal(fee);
 
+            string f = fee.ToString().Replace(".", "0");
+            string f1 = string.Format("1.{0}", f);
+            decimal feeAsDouble = Convert.ToDecimal(f1);
+            decimal maxSpend;
+
+            if (percent < 100)
+            {
+                maxSpend = (balance / 100) * percent;
+            }
+            else
+            {
+                maxSpend = balance;
+            }
+
+            price = price * feeAsDouble;
+            decimal total = 0;
+
+            if (maxSpend > 0 && price > 0)
+                total = Decimal.Round(maxSpend / price, 8, MidpointRounding.AwayFromZero);
+
+            feeAmount = Math.Round((total / 100) * fee, 8);
+
+            return total;
+
+        }
         /// <summary>
         /// Returns Cost Of Buying X Number Of Coins
         /// </summary>
@@ -54,7 +85,7 @@ namespace Toolbox
         /// <param name="fee">Buy fee of exchange</param>
         /// <param name="price">Price of coin to buy</param>
         /// <returns></returns>
-        public static decimal Buy_HowMuch(dynamic volume, dynamic fee, dynamic price, out decimal? feeAmount)
+        public static decimal Buy_HowMuch(dynamic volume, dynamic fee, dynamic price, out decimal feeAmount)
         {
             volume = Convert.ToDecimal(volume);
             fee = Convert.ToDecimal(fee);
@@ -91,7 +122,7 @@ namespace Toolbox
         /// <param name="fee">Selling fee on exchange</param>
         /// <param name="price">Price to sell for</param>
         /// <returns></returns>
-        public static decimal Sell_HowMuch(dynamic volume, dynamic fee, dynamic price, out decimal? feeTotal)
+        public static decimal Sell_HowMuch(dynamic volume, dynamic fee, dynamic price, out decimal feeTotal)
         {
             volume = Convert.ToDecimal(volume);
             fee = Convert.ToDecimal(fee);

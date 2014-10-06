@@ -16,19 +16,19 @@ namespace Json.Poloniex
         public double LastTradePrice { get; set; }
 
         [JsonProperty("lowestAsk")]
-        public double? TopAsk { get; set; }
+        public double TopAsk { get; set; }
 
         [JsonProperty("highestBid")]
-        public double? TopBid { get; set; }
+        public double TopBid { get; set; }
 
         [JsonProperty("percentChange")]
-        public double? PercentChange { get; set; }
+        public double PercentChange { get; set; }
 
         [JsonProperty("baseVolume")]
-        public double? BaseVolume { get; set; }
+        public double BaseVolume { get; set; }
 
         [JsonProperty("quoteVolume")]
-        public double? QuoteVolume { get; set; }
+        public double QuoteVolume { get; set; }
 
         [JsonProperty("isFrozen")]
         public int isFrozen { get; set; }

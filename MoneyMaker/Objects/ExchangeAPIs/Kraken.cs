@@ -52,7 +52,7 @@ namespace Objects
 
             foreach (var item in aList)
             {
-                String sN = GetStandardisedName(item.Value.Altname);
+                String sN = string.Format("{0}/{1}", item.Value.Base, item.Value.quote);
 
                 var i = item.Value;
                 Market m = new Market(Exchange)
@@ -66,7 +66,8 @@ namespace Objects
                     Commodity = i.Base,
                     Currency = i.quote,
                     MarketId = item.Key,
-                    StandardisedName = sN
+                    StandardisedName = sN,
+                    Name = i.Altname
                 };
                 m.MarketIdentity = mi;
 
@@ -141,24 +142,7 @@ namespace Objects
         }
         public override string GetStandardisedName(string Name)
         {
-            int n = Name.Length + 1;
-            StringBuilder sb = new StringBuilder();
-            int pos = 0;
-            for (int ii = 0; ii < n; ii++)
-            {
-                char c;
-                if (ii == 3)
-                {
-                    c = '/';
-                }
-                else
-                {
-                    c = Name.ElementAt(pos);
-                    pos++;
-                }
-                sb.Append(c);
-            }
-            return sb.ToString();
+            return Name;
         }
         public override HashSet<Market> GetAllMarketData()
         {
@@ -223,7 +207,19 @@ namespace Objects
         }
         public override Market GetSingleMarket(MarketIdentity MarketIdent)
         {
-            Market m = new Market(Exchange);
+            Market m = null;
+            if (_marketList != null)
+            {
+                var q = from mkts in _marketList
+                        where mkts.MarketIdentity.MarketId == MarketIdent.MarketId
+                        select mkts;
+                if (q.Count() > 0)
+                {
+                    m = q.First();
+                    m.OrderBook = GetSingleMarketOrders(MarketIdent);
+                    m.TradeRecords = GetSingleMarketTradeHistory(MarketIdent);
+                }
+            }
 
             return m;
         }
@@ -233,7 +229,7 @@ namespace Objects
 
             try
             {
-                string json = Task.Run(async()=> await PublicApi("Depth", MarketIdent.MarketId)).Result;
+                string json = Task.Run(async () => await PublicApi("Depth", MarketIdent.MarketId)).Result;
                 var jObj = JObject.Parse(json).GetValue("result").First().First();
                 var orders = jObj.ToObject<OrderBookInfo>();
                 foreach (var o in orders.asks)
@@ -245,26 +241,28 @@ namespace Objects
                     ob.BidOrders.Add(new Order(OrderType.Bid) { Price = Convert.ToDouble(o[0]), Quantity = Convert.ToDouble(o[1]) });
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.WriteEvent(e.InnerException);
             }
 
             return ob;
         }
-        public override HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+        public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
         {
-            HashSet<TradeRecord> tr = new HashSet<TradeRecord>();
+            Stack<TradeRecord> tr = new Stack<TradeRecord>();
 
             string json = Task.Run(async () => await PublicApi("Trades", MarketIdent.MarketId)).Result;
 
-            if(!string.IsNullOrEmpty(json))
+            if (!string.IsNullOrEmpty(json))
             {
                 var jObj = JObject.Parse(json).GetValue("result");
                 var xs = jObj.ToString();
                 var tList = jObj.First().First().ToObject<List<string[]>>();
 
-                foreach (var item in tList)
+                var sortedHist = tList.OrderBy(p => p[2]).ToList();
+
+                foreach (var item in sortedHist)
                 {
                     OrderType type = OrderType.Bid;
                     if (item[3] == "s")
@@ -273,24 +271,24 @@ namespace Objects
                     var timestamp = Convert.ToDouble((string)item[2]);
 
                     DateTime dt = UnixTime.ConvertToDateTime(timestamp);
-                    
-                    tr.Add(new TradeRecord
+
+                    tr.Push(new TradeRecord
                         {
                             Price = Convert.ToDouble(item[0]),
                             Quantity = Convert.ToDouble(item[1]),
                             TradeTime = dt,
-                            Type = type        
+                            Type = type
                         });
                 }
             }
 
             return tr;
-        }        
+        }
         public override HashSet<ActiveOrder> GetActiveOrders()
         {
             HashSet<ActiveOrder> ao = new HashSet<ActiveOrder>();
 
-            if(HasKeys)
+            if (HasKeys)
             {
                 string json = AuthenticatedRequest("OpenOrders");
                 if (!JObject.Parse(json).GetValue("error").HasValues)
@@ -300,8 +298,8 @@ namespace Objects
 
                     foreach (var o in data)
                     {
-                        String sN = GetStandardisedName(o.Value.descr.pair);
-                        Market m = _marketList.First(p => p.MarketIdentity.StandardisedName == sN);
+                        String altName = GetStandardisedName(o.Value.descr.pair);
+                        Market m = _marketList.First(p => p.MarketIdentity.Name == altName);
 
                         OrderType type = OrderType.Ask;
                         if (o.Value.descr.type == "buy")
@@ -400,7 +398,7 @@ namespace Objects
             {
                 tp = new Tuple<string, string>("Error", "No keys saved for this exchange.");
             }
-            
+
             return tp;
         }
         public override string CancelOrder(string OrderId = null, string MarketId = null)
@@ -433,7 +431,7 @@ namespace Objects
 
             string url;
             string json = String.Empty;
-            
+
             if (pair != null)
                 url = String.Format("https://api.kraken.com/0/public/{0}?pair={1}", method, pair);
             else
@@ -462,83 +460,66 @@ namespace Objects
         private static readonly object locker = new object();
         private string AuthenticatedRequest(string method, string props = null)
         {
-            #region Rate Limiter
-            while (isDownloading)
-            {
-                using (Task t = Task.Delay(3000))
-                {
-                    Task.WaitAll(t);
-                    t.Dispose();
-                }
-            }
-            #endregion
-
             string result;
-            lock (locker)
+
+            result = String.Empty;
+            isDownloading = true;
+
+            UInt64 nonce = (ulong)DateTime.Now.Ticks;
+            props = "nonce=" + nonce + props;
+            var np = nonce + Convert.ToChar(0) + props;
+
+            string postData = String.Format("/0/private/{0}", method);
+            byte[] messagebyte = Encoding.UTF8.GetBytes(postData);
+            string address = String.Format("https://api.kraken.com/0/private/{0}", method);
+
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(address);
+            webRequest.ContentType = "application/x-www-form-urlencoded";
+            webRequest.Method = "POST";
+            webRequest.Headers.Add("API-Key", _publicKey);
+
+            byte[] base64DecodedSecret = Convert.FromBase64String(_secret);
+
+            var hash256Bytes = sha256_hash(np);
+            var z = new byte[messagebyte.Count() + hash256Bytes.Count()];
+            messagebyte.CopyTo(z, 0);
+            hash256Bytes.CopyTo(z, messagebyte.Count());
+
+            var signature = getHash(base64DecodedSecret, z);
+
+            webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
+
+            //Make the request
+            try
             {
-                result = String.Empty;
-                isDownloading = true;
-
-                UInt64 nonce = (ulong)DateTime.Now.Ticks;
-                props = "nonce=" + nonce + props;
-                var np = nonce + Convert.ToChar(0) + props;
-
-                string postData = String.Format("/0/private/{0}", method);
-                byte[] messagebyte = Encoding.UTF8.GetBytes(postData);
-                string address = String.Format("https://api.kraken.com/0/private/{0}", method);
-
-                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(address);
-                webRequest.ContentType = "application/x-www-form-urlencoded";
-                webRequest.Method = "POST";
-                webRequest.Headers.Add("API-Key", _publicKey);
-
-                byte[] base64DecodedSecret = Convert.FromBase64String(_secret);
-
-                var hash256Bytes = sha256_hash(np);
-                var z = new byte[messagebyte.Count() + hash256Bytes.Count()];
-                messagebyte.CopyTo(z, 0);
-                hash256Bytes.CopyTo(z, messagebyte.Count());
-
-                var signature = getHash(base64DecodedSecret, z);
-
-                webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
-
-                //Make the request
-                try
+                if (props != null)
                 {
-                    if (props != null)
+
+                    using (var writer = new StreamWriter(webRequest.GetRequestStream()))
                     {
+                        writer.Write(props);
+                    }
 
-                        using (var writer = new StreamWriter(webRequest.GetRequestStream()))
+
+                    using (WebResponse webResponse = webRequest.GetResponse())
+                    {
+                        using (Stream str = webResponse.GetResponseStream())
                         {
-                            writer.Write(props);
-                        }
-
-
-                        using (WebResponse webResponse = webRequest.GetResponse())
-                        {
-                            using (Stream str = webResponse.GetResponseStream())
+                            using (StreamReader sr = new StreamReader(str))
                             {
-                                using (StreamReader sr = new StreamReader(str))
-                                {
-                                    result = sr.ReadToEnd();
-                                }
+                                result = sr.ReadToEnd();
                             }
                         }
                     }
                 }
-                catch (WebException wex)
-                {
-                    Logger.WriteEvent("Private API" + wex.InnerException);
-                }
-                catch (System.Net.Sockets.SocketException er)
-                {
-                    Logger.WriteEvent("Private API" + er.InnerException);
-                }
-                finally
-                {
-                    isDownloading = false;
-                }
+            }
+            catch (WebException wex)
+            {
+                Logger.WriteEvent("Private API" + wex.InnerException);
+            }
+            catch (System.Net.Sockets.SocketException er)
+            {
+                Logger.WriteEvent("Private API" + er.InnerException);
             }
             return result;
         }

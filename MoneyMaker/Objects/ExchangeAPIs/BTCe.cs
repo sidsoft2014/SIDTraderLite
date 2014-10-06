@@ -228,9 +228,9 @@ namespace Objects
            
             return ob;
         }
-        public override HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+        public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
         {
-            HashSet<TradeRecord> records = new HashSet<TradeRecord>();
+            Stack<TradeRecord> records = new Stack<TradeRecord>();
 
             string url = String.Format("https://btc-e.com/api/3/trades/{0}", MarketIdent.MarketId);
 
@@ -241,16 +241,19 @@ namespace Objects
                 Dictionary<string, List<MarketTrades>> jsonTradesList =
                     JsonConvert.DeserializeObject<Dictionary<string, List<MarketTrades>>>(json);
 
+                
+
                 for (int ii = 0; ii < jsonTradesList.Count; ii++)
                 {
                     var kvp = jsonTradesList.ElementAt(ii);
                     string name = GetStandardisedName(kvp.Key);
 
                     List<MarketTrades> trades = kvp.Value;
-                    foreach (var trade in trades)
+                    var sortedHist = trades.OrderBy(p => p.timestamp).ToList();
+                    foreach (var trade in sortedHist)
                     {
                         DateTime time = GeneralTools.TimeStampToDateTimeUsingSeconds(trade.timestamp);
-                        records.Add(new TradeRecord() { Price = trade.price, Quantity = trade.amount, TradeTime = time });
+                        records.Push(new TradeRecord() { Price = trade.price, Quantity = trade.amount, TradeTime = time });
                     }
                 }
             }

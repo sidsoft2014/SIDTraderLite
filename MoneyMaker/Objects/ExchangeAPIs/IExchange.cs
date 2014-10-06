@@ -137,7 +137,7 @@ namespace Objects
         /// </summary>
         /// <param name="MarketIdent"></param>
         /// <returns></returns>
-        public abstract HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent);
+        public abstract Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent);
         /// <summary>
         /// Returns ant currently active orders
         /// </summary>

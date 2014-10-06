@@ -54,7 +54,18 @@ namespace Objects
 
             if (!string.IsNullOrEmpty(json))
             {
-                var marketList = JsonConvert.DeserializeObject<Dictionary<string, PoloniexMarketTickers>>(json);
+                var jOb = JObject.Parse(json);
+                Dictionary<string, PoloniexMarketTickers> marketList = new Dictionary<string, PoloniexMarketTickers>();
+                foreach (var item in jOb)
+                {
+                    try
+                    {
+                        string key = item.Key.ToString();
+                        PoloniexMarketTickers tick = item.Value.ToObject<PoloniexMarketTickers>();
+                        marketList.Add(key, tick);
+                    }
+                    catch (InvalidCastException) {}
+                }
 
                 foreach (var mkt in marketList)
                 {
@@ -213,9 +224,9 @@ namespace Objects
             }
             return ob;
         }
-        public override HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+        public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
         {
-            HashSet<TradeRecord> trades = new HashSet<TradeRecord>();
+            Stack<TradeRecord> trades = new Stack<TradeRecord>();
 
             string url = string.Format("https://poloniex.com/public?command=returnTradeHistory&currencyPair={0}", MarketIdent.MarketId);
 
@@ -242,13 +253,15 @@ namespace Objects
                 {
                     var tradeHist = JsonConvert.DeserializeObject<List<PoloniexTradeHistory>>(json);
 
-                    foreach (var trade in tradeHist)
+                    var sortedHist = tradeHist.OrderBy(p => p.DateTime).ToList();
+
+                    foreach (var trade in sortedHist)
                     {
                         OrderType type = OrderType.Ask;
                         if (trade.TradeType == "buy")
                             type = OrderType.Bid;
 
-                        trades.Add(new TradeRecord
+                        trades.Push(new TradeRecord
                         {
                             Price = trade.Price,
                             Quantity = trade.Quantity,

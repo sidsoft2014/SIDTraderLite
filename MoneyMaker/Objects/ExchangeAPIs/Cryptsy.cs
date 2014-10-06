@@ -241,14 +241,8 @@ namespace Objects
             OrderBook oB = new OrderBook();
             string mId = MarketIdent.MarketId;
             
-            string json = null;
-            try
-            {
-                json = Task.Run(async () => await GetJsonString(mId, false)).Result;
-            }
-            catch
-            { }
-
+            string json = GetOrderBookAsync(mId).Result;
+            
             if (!string.IsNullOrEmpty(json))
             {
                 var jObj = JObject.Parse(json);
@@ -303,9 +297,15 @@ namespace Objects
             }
             return oB;
         }
-        public override HashSet<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+
+        private async Task<string> GetOrderBookAsync(string mId)
         {
-            HashSet<TradeRecord> TradeRecords = new HashSet<TradeRecord>();
+            string result = await GetJsonString(mId, false);
+            return result;
+        }
+        public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
+        {
+            Stack<TradeRecord> TradeRecords = new Stack<TradeRecord>();
             string mId = MarketIdent.MarketId;
             
             string json = null;
@@ -331,15 +331,16 @@ namespace Objects
                     
                     if (overview.recenttrades != null)
                     {
-                        overview.recenttrades.Reverse();
 
-                        foreach (var trade in overview.recenttrades)
+                        var sortedHist = overview.recenttrades.OrderBy(p => p.time).ToList();
+
+                        foreach (var trade in sortedHist)
                         {
                             OrderType type = OrderType.Ask;
                             if (trade.type == "Buy")
                                 type = OrderType.Bid;
 
-                            TradeRecords.Add(new TradeRecord()
+                            TradeRecords.Push(new TradeRecord()
                             {
                                 Price = Convert.ToDouble(trade.price),
                                 Quantity = Convert.ToDouble(trade.quantity),
