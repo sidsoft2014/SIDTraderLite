@@ -5,6 +5,7 @@ SIDTraderLite is a simple, lightweight crypto-currency trading platform supporti
 <br>
 <br>
 Currently supported exchanges are:<br>
+-Bittrex<br>
 -BTCe<br>
 -Cryptsy<br>
 -Kraken<br>
