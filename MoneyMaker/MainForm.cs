@@ -46,6 +46,7 @@ namespace Objects
 
         private static readonly Dictionary<ExchangeEnum, string> defaultGaps = new Dictionary<ExchangeEnum, string>()
         {
+            {ExchangeEnum.Bittrex, "120"},
             {ExchangeEnum.BTCe, "120"},
             {ExchangeEnum.Cryptsy, "600"},
             {ExchangeEnum.Kraken, "300"},
@@ -60,8 +61,8 @@ namespace Objects
         private static Market ActiveMarket;
         private static ActiveOrder SelectedActiveOrder;
 
-        private static BindingSource ConditionalOrderListBinder;
-        private static BindingSource TradeHistoryBinder;
+        private BindingSource ConditionalOrderListBinder;
+        private BindingSource TradeHistoryBinder;
         #endregion
 
         #region Constructor
@@ -227,8 +228,7 @@ namespace Objects
 
                 LinkOrderBook();
                 GetBalances();
-
-                UpdateBalanceLabels();
+                
                 SetDecimalsOnGrids();
                 SetSellingParameters();
                 SetBuyingParameters();
@@ -675,17 +675,9 @@ namespace Objects
             ///Price Fields
             this.dgv_Asks_Price.DefaultCellStyle = dataGridViewCellStyle_Price;
             this.dgv_Bids_Price.DefaultCellStyle = dataGridViewCellStyle_Price;
-            this.availableDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Price;
-            this.heldDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Price;
-            this.totalDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Price;
-            this.priceDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Price;
-
             ///Quantity Fields
             this.dgv_Bids_Quantity.DefaultCellStyle = dataGridViewCellStyle_Quant;
             this.dgv_Asks_Quantity.DefaultCellStyle = dataGridViewCellStyle_Quant;
-            this.quantityDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Quant;
-            this.remainingDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle_Quant;
-
         }
         private void SetBuyingParameters()
         {
@@ -808,22 +800,25 @@ namespace Objects
         /// </summary>
         private void GetBalances()
         {
-            var comQ = from cM in BalanceTables[ActiveMarket.ExchangeName]
-                       where cM.Name == ActiveMarket.MarketIdentity.Commodity
-                       select cM;
-            var curQ = from cR in BalanceTables[ActiveMarket.ExchangeName]
-                       where cR.Name == ActiveMarket.MarketIdentity.Currency
-                       select cR;
+            if (null != ActiveMarket)
+            {
+                var comQ = from cM in BalanceTables[ActiveMarket.ExchangeName]
+                           where cM.Name == ActiveMarket.MarketIdentity.Commodity
+                           select cM;
+                var curQ = from cR in BalanceTables[ActiveMarket.ExchangeName]
+                           where cR.Name == ActiveMarket.MarketIdentity.Currency
+                           select cR;
 
-            commodityBalance = 0;
-            currencyBalance = 0;
+                commodityBalance = 0;
+                currencyBalance = 0;
 
-            if (comQ.Count() > 0)
-                commodityBalance = comQ.ElementAt(0).Available;
-            if (curQ.Count() > 0)
-                currencyBalance = curQ.ElementAt(0).Available;
+                if (comQ.Count() > 0)
+                    commodityBalance = comQ.ElementAt(0).Available;
+                if (curQ.Count() > 0)
+                    currencyBalance = curQ.ElementAt(0).Available;
 
-            UpdateBalanceLabels();
+                UpdateBalanceLabels();
+            }
         }
         private void GetActiveOrders()
         {
@@ -959,6 +954,18 @@ namespace Objects
             {
                 switch (e.ApiStateChange.Item1)
                 {
+                    case ExchangeEnum.Bittrex:
+                        {
+                            if (e.ApiStateChange.Item2 == true)
+                            {
+                                ApiIndicator_Bittrex.BackColor = colourOk;
+                            }
+                            else
+                            {
+                                ApiIndicator_Bittrex.BackColor = colourError;
+                            }
+                            break;
+                        }
                     case ExchangeEnum.BTCe:
                         {
                             if (e.ApiStateChange.Item2 == true)
@@ -1090,6 +1097,7 @@ namespace Objects
                     ActiveMarket.TradeRecords = e.NewOrderBook.Item2;
                     LinkOrderBook();
                     UpdateSettingsLabels();
+                    UpdateBalanceLabels();
                 }
             }
         }
@@ -1114,7 +1122,10 @@ namespace Objects
                 UpdateStatusLabel("Balances Updated: " + exRef);
 
                 if (exRef == ActiveExchangeName)
+                {
                     LinkBalances();
+                    GetBalances();
+                }
             }
         }
         internal void Core_event_NewActiveOrders(object sender, CoreEvents e)
@@ -1611,6 +1622,17 @@ namespace Objects
                 UpdateStatusLabel("Can't update Poloniex.");
             }
         }
+        private async void ApiIndicator_Bittrex_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await Core.ForceUpdate(ExchangeEnum.Bittrex, "All");
+            }
+            catch
+            {
+                UpdateStatusLabel("Can't update Bittrex.");
+            }
+        }
         #endregion
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -1619,5 +1641,6 @@ namespace Objects
             toolStripLabel_Status.Text = "Closing";
             Core.CloseCore();
         }
+
     }
 }

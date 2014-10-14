@@ -53,22 +53,24 @@ namespace Objects
         }
         private static List<ExchangeEnum> ActiveExchanges;
         private static PushTickerHitClient PusherClient;
-       
+
         private static ConcurrentDictionary<ExchangeEnum, string[]> lastUpdateTimes;
-        
+        private static System.Timers.Timer actMktTimer;
+
+        private static API_Bittrex Bittrex;
         private static API_Cryptsy Cryptsy;
         private static API_BTCe BTCe;
         private static API_Poloniex Poloniex;
         private static API_Kraken Kraken;
         //private static API_MintPal MintPal;
         //private static API_Vircurex Vircurex;
-       
+
         private static Market ActiveMarket;
 
         public static bool running;
         public static bool exited;
         #endregion
-        
+
         #region Constructor
         /// <summary>
         /// Needs adjusting everytime a new exchange is added
@@ -81,6 +83,7 @@ namespace Objects
 
             string dt = DateTime.Now.ToString();
             lastUpdateTimes = new ConcurrentDictionary<ExchangeEnum, string[]>();
+            lastUpdateTimes.TryAdd(ExchangeEnum.Bittrex, new string[] { "120", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.BTCe, new string[] { "120", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.Cryptsy, new string[] { "600", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.Kraken, new string[] { "300", dt });
@@ -248,28 +251,75 @@ namespace Objects
         }
         public static async Task<Market> SetActiveMarket(ExchangeEnum exch, string market)
         {
+            bool firstRun = false;
+            if (ActiveMarket == null)
+                firstRun = true;
+
             Exchange ex;
             IExchange iex = SwitchExchange(exch, out ex);
 
-            ActiveMarket = ex.Markets.FirstOrDefault(p => p.MarketIdentity.StandardisedName == market);
-            
-            if (ActiveMarket == null)
-                ActiveMarket = ex.Markets.FirstOrDefault(p => p.MarketIdentity.MarketId == market);
+            var q = from mk in ex.Markets
+                    where mk.MarketIdentity.StandardisedName == market
+                    select mk;
 
-            if (ActiveMarket == null)
-                throw new Exception();
+            if (q.Count() == 0)
+            {
+                q = from mk in ex.Markets
+                    where mk.MarketIdentity.MarketId == market
+                    select mk;
+                if (q.Count() == 0)
+                {
+                    throw new Exception();
+                }
+            }
 
-            
+            ActiveMarket = q.First();
+
             ActiveMarket.TradeRecords.Clear();
-            var lst = await Task.Run(() => iex.GetSingleMarketTradeHistory(ActiveMarket.MarketIdentity).ToList().OrderBy(p => p.TradeTime));            
+            var lst = await Task.Run(() => iex.GetSingleMarketTradeHistory(ActiveMarket.MarketIdentity).ToList().OrderBy(p => p.TradeTime));
             foreach (var l in lst)
             {
                 ActiveMarket.TradeRecords.Push(l);
             }
 
             ActiveMarket.OrderBook = await Task.Run(() => iex.GetSingleMarketOrders(ActiveMarket.MarketIdentity));
-            
+
+            if (firstRun)
+            {
+                StartActiveMarketTimer();
+            }
+
             return ActiveMarket;
+        }
+
+        private static void StartActiveMarketTimer()
+        {
+            if (actMktTimer == null)
+            {
+                actMktTimer = new System.Timers.Timer();
+                actMktTimer.Interval = 10000;
+                actMktTimer.AutoReset = false;
+                actMktTimer.Elapsed += actMktTimer_Elapsed;
+                actMktTimer.Start();
+            }
+        }
+
+        static void actMktTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            actMktTimer = null;
+
+            if (ActiveMarket != null)
+            {
+                Exchange ex;
+                IExchange ordEx = SwitchExchange(ActiveMarket.ExchangeName, out ex);
+
+                ActiveMarket.TradeRecords = ordEx.GetSingleMarketTradeHistory(ActiveMarket.MarketIdentity);
+                ActiveMarket.OrderBook = ordEx.GetSingleMarketOrders(ActiveMarket.MarketIdentity);
+
+                NotifyOrderBookSubscribers(ActiveMarket.OrderBook, ActiveMarket.TradeRecords);
+
+                StartActiveMarketTimer();
+            }
         }
         /// <summary>
         /// Simplified order placing method.
@@ -427,7 +477,7 @@ namespace Objects
         private static void UpdateTickers(ExchangeEnum exc)
         {
             Exchange exch = Exchanges[exc];
-            for (int ii = 0; ii < exch.Markets.Count; ii++ )
+            for (int ii = 0; ii < exch.Markets.Count; ii++)
             {
                 var market = exch.Markets.ElementAt(ii);
                 var tObj = market.Ticker;
@@ -585,11 +635,18 @@ namespace Objects
 
         public static void CloseCore()
         {
+            if (actMktTimer != null)
+                actMktTimer = null;
             if (running)
                 running = false;
             if (!exited)
                 exited = true;
-            
+            if (ActiveMarket != null)
+                ActiveMarket = null;
+            if (ActiveExchanges != null)
+                ActiveExchanges = null;
+            if (Exchanges != null)
+                Exchanges = null;
         }
         #endregion
 
@@ -601,7 +658,7 @@ namespace Objects
         internal static void pusher_Event_PusherDataIn(object sender, Toolbox.PusherEventArgs e)
         {
             var pd = e.pusherData;
-            
+
             var mktQ = from d in Exchanges[ExchangeEnum.Cryptsy].Markets
                        where d.MarketIdentity.StandardisedName == pd["Market"].ToUpper()
                        select d;
@@ -648,10 +705,10 @@ namespace Objects
                     double quant = Convert.ToDouble(pd["Quantity"]);
                     DateTime time = DateTime.Parse(pd["Time"]);
 
-                     OrderType type = OrderType.Ask;
-                                if (pd["Type"] == "Buy")
-                                    type = OrderType.Bid;
-                                mkt.TradeRecords.Push(new TradeRecord { Price = price, Quantity = quant, TradeTime = time, Type = type });
+                    OrderType type = OrderType.Ask;
+                    if (pd["Type"] == "Buy")
+                        type = OrderType.Bid;
+                    mkt.TradeRecords.Push(new TradeRecord { Price = price, Quantity = quant, TradeTime = time, Type = type });
                 }
 
                 SendTickerRow(mkt.Ticker);
@@ -677,6 +734,7 @@ namespace Objects
         /// <param name="exOut"></param>
         /// <returns></returns>
         #region Internal Methods
+        ///The switch statement in this method needs updating for each new exchange addeed
         private static IExchange SwitchExchange(ExchangeEnum exEnum, out Exchange exOut)
         {
             exOut = new Exchange(exEnum);
@@ -692,6 +750,25 @@ namespace Objects
             IExchange iex = null;
             switch (exEnum)
             {
+                case ExchangeEnum.Bittrex:
+                    {
+                        if (Bittrex == null)
+                        {
+                            Bittrex = new API_Bittrex(exOut);
+                            Bittrex.event_DeclaringApiState += iEx_event_DeclaringApiState;
+                            Bittrex.event_ApiBytesDownloaded += iEx_event_ApiBytesDownloaded;
+
+                            if (CurrentUser.EncryptedKeys.ContainsKey(ExchangeEnum.Bittrex))
+                            {
+                                var items = CurrentUser.EncryptedKeys[ExchangeEnum.Bittrex];
+                                SecureString sspk = EncryptionTools.UserDecrypt(items[0], CurrentUser);
+                                SecureString sssk = EncryptionTools.UserDecrypt(items[1], CurrentUser);
+                                Bittrex.SetKeys(sspk, sssk);
+                            }
+                        }
+                        iex = Bittrex;
+                        break;
+                    }
                 case ExchangeEnum.BTCe:
                     {
                         if (BTCe == null)
@@ -731,7 +808,7 @@ namespace Objects
                         break;
                     }
                 case ExchangeEnum.MintPal:
-                    {                        
+                    {
                         break;
                     }
                 case ExchangeEnum.Poloniex:
@@ -782,7 +859,7 @@ namespace Objects
             var ex = sender as IExchange;
             NotifyExchangeMessageSubscribers(ex.ExchangeName, e.BytesDownloaded);
         }
-        
+
         private static void SendTickerRow(Ticker input)
         {
             CheckConditionalOrders(input);
@@ -820,9 +897,9 @@ namespace Objects
                 if (ConditionalTrades != null && ConditionalTrades.Count > 0)
                 {
                     var tradeList = from cT in ConditionalTrades[input.ExchangeName]
-                            where cT.Market.StandardisedName == input.Market.MarketIdentity.StandardisedName
-                            && cT.Market.ExchangeName == input.Market.MarketIdentity.ExchangeName
-                            select cT;
+                                    where cT.Market.StandardisedName == input.Market.MarketIdentity.StandardisedName
+                                    && cT.Market.ExchangeName == input.Market.MarketIdentity.ExchangeName
+                                    select cT;
 
                     if (tradeList.Count() > 0)
                     {
@@ -871,7 +948,7 @@ namespace Objects
                                 {
                                     ConditionalTrades[input.ExchangeName].Remove(t);
                                     NotifyConditionalOrdersSubscribers();
-                                    PlaceOrder(t.Market.ExchangeName, t.Market, t.Type, t.Price, t.Quantity);                                    
+                                    PlaceOrder(t.Market.ExchangeName, t.Market, t.Type, t.Price, t.Quantity);
                                 }
                             }
                         }
@@ -900,19 +977,16 @@ namespace Objects
                 var result = ordEx.PlaceBasicOrder(Identity, Type, Price, Quantity);
                 string OrderId = result.Item1;
 
-
-                UpdateInfo(exName);
-
                 NotifyExchangeMessageSubscribers(exName, OrderId);
 
-                Task.Factory.StartNew(()=>PostOrderUpdate(Identity.MarketId, ex, ordEx));
+                Task.Factory.StartNew(() => PostOrderUpdate(Identity.MarketId, ex, ordEx));
 
                 return new string[] { result.Item1, result.Item2 };
             }
             else return new string[] { "Error", "Order amounts invalid" };
         }
 
-        private static void PostOrderUpdate(String MarketId, Exchange ex, IExchange ordEx)
+        private static async void PostOrderUpdate(String MarketId, Exchange ex, IExchange ordEx)
         {
             var q = from mkt in ex.Markets
                     where mkt.MarketIdentity.MarketId == MarketId
@@ -920,14 +994,36 @@ namespace Objects
 
             if (q.Count() > 0)
             {
-                Task t = Task.Run(async () => await Task.Delay(500));
-                Task.WaitAll(t);
+                /// wait for 1 second before updating to try and ensure order has been processed
+                await Task.Delay(1000);
 
-                // ordEx.GetSingleMarket(Identity);
+                ///Get count of active orders before update.
+                ///Once update is done this number should have changed.
+                ///If it hasn't the exchange probably still hadn't updated and we should wait then perform the update again.
+                int aO = ex.ActiveOrders.Count;
+
+                UpdateInfo(ex.Name);
+
+                while (aO == ex.ActiveOrders.Count)
+                {
+                    await Task.Delay(3000);
+                    UpdateInfo(ex.Name);
+                }
+
                 Market m = q.First();
-                m.OrderBook = ordEx.GetSingleMarketOrders(m.MarketIdentity);
                 m.TradeRecords = ordEx.GetSingleMarketTradeHistory(m.MarketIdentity);
+                m.OrderBook = ordEx.GetSingleMarketOrders(m.MarketIdentity);
+
+                if (ActiveMarket != null
+                    && m.MarketIdentity.StandardisedName == ActiveMarket.MarketIdentity.StandardisedName
+                    && m.MarketIdentity.ExchangeName == ActiveMarket.MarketIdentity.ExchangeName)
+                {
+                    ActiveMarket = m;
+                }
                 NotifyOrderBookSubscribers(m.OrderBook, m.TradeRecords);
+
+                await Task.Delay(5000);
+                await ForceUpdate(ex.Name, "All");
             }
         }
 
@@ -937,14 +1033,11 @@ namespace Objects
             if (OrderId != null)
             {
                 Exchange ex;
-                IExchange ordEx = SwitchExchange(exName, out ex);                
+                IExchange ordEx = SwitchExchange(exName, out ex);
 
                 result = ordEx.CancelOrder(OrderId, MarketIdent);
 
-                UpdateInfo(exName);
-
                 Task.Factory.StartNew(() => PostOrderUpdate(MarketIdent, ex, ordEx));
-
             }
             return result;
         }
@@ -978,9 +1071,9 @@ namespace Objects
         internal static void EditUserKeys()
         {
             KeySetter kS = new KeySetter(CurrentUser);
-            kS.FormClosed += (s,e) =>
+            kS.FormClosed += (s, e) =>
             {
-                ApplyUserKeys();
+                Task.Factory.StartNew(()=>ApplyUserKeys());
             };
             kS.Show();
         }

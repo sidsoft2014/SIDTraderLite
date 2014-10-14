@@ -139,6 +139,7 @@
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.donationForm1 = new Donate.DonationForm();
             this.toolStrip_Apis = new System.Windows.Forms.ToolStrip();
+            this.ApiIndicator_Bittrex = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_BTCe = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Cryptsy = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Kraken = new System.Windows.Forms.ToolStripButton();
@@ -211,8 +212,8 @@
             // 
             // toolStripContainer_Main.TopToolStripPanel
             // 
-            this.toolStripContainer_Main.TopToolStripPanel.Controls.Add(this.toolStrip_Apis);
             this.toolStripContainer_Main.TopToolStripPanel.Controls.Add(this.toolStrip_Settings);
+            this.toolStripContainer_Main.TopToolStripPanel.Controls.Add(this.toolStrip_Apis);
             // 
             // toolStrip_Status
             // 
@@ -1401,15 +1402,27 @@
             // 
             this.toolStrip_Apis.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip_Apis.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ApiIndicator_Bittrex,
             this.ApiIndicator_BTCe,
             this.ApiIndicator_Cryptsy,
             this.ApiIndicator_Kraken,
             this.ApiIndicator_MintPal,
             this.ApiIndicator_Poloniex});
-            this.toolStrip_Apis.Location = new System.Drawing.Point(3, 0);
+            this.toolStrip_Apis.Location = new System.Drawing.Point(38, 0);
             this.toolStrip_Apis.Name = "toolStrip_Apis";
-            this.toolStrip_Apis.Size = new System.Drawing.Size(127, 25);
+            this.toolStrip_Apis.Size = new System.Drawing.Size(181, 25);
             this.toolStrip_Apis.TabIndex = 1;
+            // 
+            // ApiIndicator_Bittrex
+            // 
+            this.ApiIndicator_Bittrex.BackColor = System.Drawing.Color.Tomato;
+            this.ApiIndicator_Bittrex.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.ApiIndicator_Bittrex.Image = global::Objects.Properties.Resources.icon_bittrex;
+            this.ApiIndicator_Bittrex.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ApiIndicator_Bittrex.Name = "ApiIndicator_Bittrex";
+            this.ApiIndicator_Bittrex.Size = new System.Drawing.Size(23, 22);
+            this.ApiIndicator_Bittrex.ToolTipText = "Force Update (Bittrex)";
+            this.ApiIndicator_Bittrex.Click += new System.EventHandler(this.ApiIndicator_Bittrex_Click);
             // 
             // ApiIndicator_BTCe
             // 
@@ -1471,7 +1484,7 @@
             this.toolStrip_Settings.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip_Settings.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButton_EditKeys});
-            this.toolStrip_Settings.Location = new System.Drawing.Point(130, 0);
+            this.toolStrip_Settings.Location = new System.Drawing.Point(3, 0);
             this.toolStrip_Settings.Name = "toolStrip_Settings";
             this.toolStrip_Settings.Size = new System.Drawing.Size(35, 25);
             this.toolStrip_Settings.TabIndex = 0;
@@ -1667,6 +1680,7 @@
         private System.Windows.Forms.Label label_CondTot;
         private System.Windows.Forms.TabPage tabPage6;
         private Donate.DonationForm donationForm1;
+        private System.Windows.Forms.ToolStripButton ApiIndicator_Bittrex;
     
     }
 }

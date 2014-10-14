@@ -20,8 +20,6 @@ namespace Objects
         public API_Kraken(Exchange exchange)
         {
             this.Exchange = exchange;
-            this.MarketIds = new Dictionary<string, string>();
-            this.cookieJar = new CookieContainer();
         }
         ~API_Kraken()
         {
@@ -31,15 +29,9 @@ namespace Objects
         #region Fields
         private string _secret;
         private bool isDownloading = false;
-        private CookieContainer cookieJar;
         private DateTime lastCallTime;
         #endregion
-
-        #region Properties
-        public override Dictionary<string, string> MarketIds { get; protected set; }
-        public override ExchangeEnum ExchangeName { get { return ExchangeEnum.Kraken; } }
-        #endregion
-
+        
         #region Unique Methods
         private void GetAssetInfo()
         {
@@ -204,24 +196,6 @@ namespace Objects
                 else return _marketList as HashSet<Market>;
             }
             else return _marketList as HashSet<Market>;
-        }
-        public override Market GetSingleMarket(MarketIdentity MarketIdent)
-        {
-            Market m = null;
-            if (_marketList != null)
-            {
-                var q = from mkts in _marketList
-                        where mkts.MarketIdentity.MarketId == MarketIdent.MarketId
-                        select mkts;
-                if (q.Count() > 0)
-                {
-                    m = q.First();
-                    m.OrderBook = GetSingleMarketOrders(MarketIdent);
-                    m.TradeRecords = GetSingleMarketTradeHistory(MarketIdent);
-                }
-            }
-
-            return m;
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {

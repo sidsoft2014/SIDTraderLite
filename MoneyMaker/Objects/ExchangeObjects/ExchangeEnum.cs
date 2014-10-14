@@ -8,6 +8,7 @@ namespace Objects
 {
     public enum ExchangeEnum
     {
+        Bittrex,
         BTCe,
         Cryptsy,
         Kraken,

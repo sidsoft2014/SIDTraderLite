@@ -43,6 +43,7 @@
             this.label_uName = new System.Windows.Forms.Label();
             this.button_Wipe = new System.Windows.Forms.Button();
             this.label_Status = new System.Windows.Forms.Label();
+            this.button_Bittrex = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -53,11 +54,6 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
-            this.tableLayoutPanel1.Controls.Add(this.button_Poloniex, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.button_Mint, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.button_Kraken, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.button_Cryptsy, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.button_BTCe, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.button_Save, 2, 9);
             this.tableLayoutPanel1.Controls.Add(this.label_ExName, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.textBox_sKey, 1, 7);
@@ -67,6 +63,12 @@
             this.tableLayoutPanel1.Controls.Add(this.label_uName, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.button_Wipe, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.label_Status, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.button_Bittrex, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.button_Poloniex, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.button_Mint, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.button_Kraken, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.button_Cryptsy, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.button_BTCe, 0, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -89,7 +91,7 @@
             this.button_Poloniex.BackgroundImage = global::Objects.Properties.Resources.PoloniexMain;
             this.button_Poloniex.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.button_Poloniex.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button_Poloniex.Location = new System.Drawing.Point(3, 179);
+            this.button_Poloniex.Location = new System.Drawing.Point(3, 223);
             this.button_Poloniex.Name = "button_Poloniex";
             this.button_Poloniex.Size = new System.Drawing.Size(180, 38);
             this.button_Poloniex.TabIndex = 4;
@@ -101,7 +103,7 @@
             this.button_Mint.BackgroundImage = global::Objects.Properties.Resources.but_mint_tp;
             this.button_Mint.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.button_Mint.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button_Mint.Location = new System.Drawing.Point(3, 135);
+            this.button_Mint.Location = new System.Drawing.Point(3, 179);
             this.button_Mint.Name = "button_Mint";
             this.button_Mint.Size = new System.Drawing.Size(180, 38);
             this.button_Mint.TabIndex = 3;
@@ -113,7 +115,7 @@
             this.button_Kraken.BackgroundImage = global::Objects.Properties.Resources.but_kraken_tp;
             this.button_Kraken.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.button_Kraken.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button_Kraken.Location = new System.Drawing.Point(3, 91);
+            this.button_Kraken.Location = new System.Drawing.Point(3, 135);
             this.button_Kraken.Name = "button_Kraken";
             this.button_Kraken.Size = new System.Drawing.Size(180, 38);
             this.button_Kraken.TabIndex = 2;
@@ -125,7 +127,7 @@
             this.button_Cryptsy.BackgroundImage = global::Objects.Properties.Resources.but_cryptsy_tp;
             this.button_Cryptsy.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.button_Cryptsy.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button_Cryptsy.Location = new System.Drawing.Point(3, 47);
+            this.button_Cryptsy.Location = new System.Drawing.Point(3, 91);
             this.button_Cryptsy.Name = "button_Cryptsy";
             this.button_Cryptsy.Size = new System.Drawing.Size(180, 38);
             this.button_Cryptsy.TabIndex = 1;
@@ -137,7 +139,7 @@
             this.button_BTCe.BackgroundImage = global::Objects.Properties.Resources.but_btce_tp;
             this.button_BTCe.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.button_BTCe.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button_BTCe.Location = new System.Drawing.Point(3, 3);
+            this.button_BTCe.Location = new System.Drawing.Point(3, 47);
             this.button_BTCe.Name = "button_BTCe";
             this.button_BTCe.Size = new System.Drawing.Size(180, 38);
             this.button_BTCe.TabIndex = 0;
@@ -199,6 +201,7 @@
             this.textBox_pKey.Name = "textBox_pKey";
             this.textBox_pKey.Size = new System.Drawing.Size(341, 20);
             this.textBox_pKey.TabIndex = 5;
+            this.textBox_pKey.Enter += new System.EventHandler(this.textBox_pKey_Enter);
             // 
             // label1
             // 
@@ -249,6 +252,17 @@
             this.label_Status.Text = "Status";
             this.label_Status.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // button_Bittrex
+            // 
+            this.button_Bittrex.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button_Bittrex.Image = global::Objects.Properties.Resources.logo_bittrex;
+            this.button_Bittrex.Location = new System.Drawing.Point(3, 3);
+            this.button_Bittrex.Name = "button_Bittrex";
+            this.button_Bittrex.Size = new System.Drawing.Size(180, 38);
+            this.button_Bittrex.TabIndex = 104;
+            this.button_Bittrex.UseVisualStyleBackColor = true;
+            this.button_Bittrex.Click += new System.EventHandler(this.button_Bittrex_Click);
+            // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.AutoScroll = true;
@@ -296,6 +310,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.Button button_Wipe;
         private System.Windows.Forms.Label label_Status;
+        private System.Windows.Forms.Button button_Bittrex;
 
     }
 }

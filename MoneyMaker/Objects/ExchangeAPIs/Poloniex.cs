@@ -21,22 +21,11 @@ namespace Objects
         public API_Poloniex(Exchange exchange)
         {
             this.Exchange = exchange;
-            this.MarketIds = new Dictionary<string, string>();
-            this.cookieJar = new CookieContainer();
         }
         ~API_Poloniex()
         {
             ClearKeys();
         }
-
-        #region Fields
-        private CookieContainer cookieJar;
-        #endregion
-
-        #region Properties
-        public override Dictionary<string, string> MarketIds { get; protected set; }
-        public override ExchangeEnum ExchangeName { get { return ExchangeEnum.Poloniex; } }
-        #endregion
 
         #region UniqueMethods
         private async Task<HashSet<Market>> PoloniexCombinedUpdate()
@@ -55,66 +44,88 @@ namespace Objects
             if (!string.IsNullOrEmpty(json))
             {
                 var jOb = JObject.Parse(json);
-                Dictionary<string, PoloniexMarketTickers> marketList = new Dictionary<string, PoloniexMarketTickers>();
+                var jsonObjects = new Dictionary<string, PoloniexMarketTickers>();
                 foreach (var item in jOb)
                 {
                     try
                     {
                         string key = item.Key.ToString();
                         PoloniexMarketTickers tick = item.Value.ToObject<PoloniexMarketTickers>();
-                        marketList.Add(key, tick);
+                        jsonObjects.Add(key, tick);
                     }
                     catch (InvalidCastException) {}
                 }
 
-                foreach (var mkt in marketList)
+                foreach (var mkt in jsonObjects)
                 {
+                    Market m;
                     string sName = GetStandardisedName(mkt.Key);
-                    string[] curCom = sName.Split('/');
 
-                    Market m = new Market(this.Exchange)
-                    {
-                        PriceDecimals = 8,
-                        QuantDecimals = 8,
-                        MinPrice = 0.00000001,
-                        MaxPrice = 0,
-                        MinQuant = 0,
-                    };
-
-                    //Poloniex trade records need to be downloaded individually
-                    //also there is a cap on api requests. For these reasons we
-                    //add a minimal trade object to the top of the trade stack so 
-                    //tickers have a value for this.
-                    TradeRecord tr = new TradeRecord
-                    {
-                        Price = mkt.Value.LastTradePrice
-                    };
-                    m.TradeRecords.Push(tr);
-
-                    MarketIdentity mi = new MarketIdentity(m)
-                    {
-                        Commodity = curCom[0],
-                        Currency = curCom[1],
-                        MarketId = mkt.Key,
-                        Name = mkt.Key,
-                        StandardisedName = sName
-                    };
-                    m.MarketIdentity = mi;
-
-                    Fee fee = new Fee
-                    {
-                        Market = m,
-                        MarketId = mkt.Key,
-                        FeePercentage = 0.2,
-                        Quantity = 0
-                    };
-                    m.Fees.Add(fee);
-
-                    if (!MarketIds.ContainsKey(sName))
+                    /// If MarketsId list doesn't contain the market we need to create a new one.
+                    if(!MarketIds.ContainsKey(sName))
                     {
                         MarketIds.Add(sName, mkt.Key);
+                        string[] curCom = sName.Split('/');
+
+                        m = new Market(this.Exchange)
+                        {
+                            PriceDecimals = 8,
+                            QuantDecimals = 8,
+                            MinPrice = 0.00000001,
+                            MaxPrice = 0,
+                            MinQuant = 0,
+                        };
+                        MarketIdentity mi = new MarketIdentity(m)
+                        {
+                            Commodity = curCom[0],
+                            Currency = curCom[1],
+                            MarketId = mkt.Key,
+                            Name = mkt.Key,
+                            StandardisedName = sName
+                        };
+                        m.MarketIdentity = mi;
+
+                        Fee fee = new Fee
+                        {
+                            Market = m,
+                            MarketId = mkt.Key,
+                            FeePercentage = 0.2,
+                            Quantity = 0
+                        };
+                        m.Fees.Add(fee);
+
+                        _marketList.Add(m);
                     }
-                    _marketList.Add(m);
+                    /// Else we want to update the existing market
+                    else
+                    {
+                        var q = from mkts in _marketList
+                                where mkts.MarketIdentity.StandardisedName == sName
+                                select mkts;
+
+                        if (q.Count() > 0)
+                        {
+                            m = q.First();
+                        }
+                        else m = null;
+                    }
+
+                    if (null != m)
+                    {
+                        //Poloniex trade records need to be downloaded individually
+                        //also there is a cap on api requests. For these reasons we
+                        //add a minimal trade object to the top of the trade stack to
+                        //prevent null reference errors.
+                        TradeRecord tr = new TradeRecord
+                        {
+                            Price = mkt.Value.LastTradePrice
+                        };
+                        m.TradeRecords.Push(tr);
+
+                        m.Ticker.TopAsk = mkt.Value.TopAsk;
+                        m.Ticker.TopBid = mkt.Value.TopBid;
+                        m.Ticker.LastTrade.Price = mkt.Value.LastTradePrice;
+                    }                    
                 }
             }
         }
@@ -172,18 +183,6 @@ namespace Objects
             Task<HashSet<Market>> t = Task.Run(async () => await PoloniexCombinedUpdate());
             HashSet<Market> r = t.Result;
             return r;
-        }
-        public override Market GetSingleMarket(MarketIdentity MarketIdent)
-        {
-            var mkt = new Market(Exchange);
-
-            var q = from m in _marketList
-                    where m.MarketIdentity.StandardisedName == MarketIdent.StandardisedName
-                    select m;
-            if (q.Count() > 0)
-                mkt = q.First();
-
-            return mkt;
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {

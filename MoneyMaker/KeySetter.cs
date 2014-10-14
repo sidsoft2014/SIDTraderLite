@@ -22,6 +22,8 @@ namespace Objects
             label_Status.Text = "";
             label_uName.Text = string.Format("User: {0}", user.UserName);            
         }
+
+        #region Exchange Buttons
         private void button_BTCe_Click(object sender, EventArgs e)
         {
             selectedExchange = ExchangeEnum.BTCe;
@@ -47,11 +49,19 @@ namespace Objects
             selectedExchange = ExchangeEnum.MintPal;
             UpdateUI();
         }
+        private void button_Bittrex_Click(object sender, EventArgs e)
+        {
+            selectedExchange = ExchangeEnum.Bittrex;
+            UpdateUI();
+        }
         private void button_Vircurex_Click(object sender, EventArgs e)
         {
             selectedExchange = ExchangeEnum.Vircurex;
             UpdateUI();
         }
+        #endregion
+       
+
         private void UpdateUI()
         {
             label_ExName.Text = selectedExchange.ToString();
@@ -112,5 +122,12 @@ namespace Objects
         {
             this.activeUser = null;
         }
+
+        private void textBox_pKey_Enter(object sender, EventArgs e)
+        {
+            if (textBox_pKey.Text == "Keys saved")
+                textBox_pKey.Text = "";
+        }
+
     }
 }

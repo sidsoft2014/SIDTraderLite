@@ -20,23 +20,12 @@ namespace Objects
         public API_MintPal(Exchange exchange)
         {
             this.Exchange = exchange;
-            this.MarketIds = new Dictionary<string, string>();
-            this.cookieJar = new CookieContainer();
         }
         ~API_MintPal()
         {
             ClearKeys();
         }
-
-        #region Fields
-        private CookieContainer cookieJar;
-        #endregion
-
-        #region Properties
-        public override Dictionary<string, string> MarketIds { get; protected set; }
-        public override ExchangeEnum ExchangeName { get { return ExchangeEnum.MintPal; } }
-        #endregion
-
+        
         #region Methods
         public override string GetStandardisedName(string Name)
         {
@@ -45,12 +34,6 @@ namespace Objects
         public override HashSet<Market> GetAllMarketData()
         {
             throw new NotImplementedException();
-        }
-        public override Market GetSingleMarket(MarketIdentity MarketIdent)
-        {
-            Market m = new Market(Exchange);
-
-            return m;
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {

@@ -19,18 +19,11 @@ namespace Objects
 {
     public class API_BTCe : IExchange
     {
-        internal CookieContainer cookieJar;
-        UInt32 nonce = UnixTime.Now;
-        UInt32 GetTheNonce()
-        {
-            return nonce++;
-        }
+       
         
         public API_BTCe(Exchange exchange)
         {
             this.Exchange = exchange;
-            MarketIds = new Dictionary<string, string>();
-            cookieJar = new CookieContainer();
         }
         ~API_BTCe()
         {
@@ -177,8 +170,6 @@ namespace Objects
         }
 
         #region IExchange
-        public override Dictionary<string, string> MarketIds { get; protected set; }
-        public override ExchangeEnum ExchangeName { get { return ExchangeEnum.BTCe; } }
         public override string GetStandardisedName(string Name)
         {
             string[] parts = Name.ToUpper().Split('_');
@@ -188,16 +179,6 @@ namespace Objects
         public override HashSet<Market> GetAllMarketData()
         {
             return BTCeCombinedUpdate();
-        }
-        public override Market GetSingleMarket(MarketIdentity MarketIdent)
-        {
-            var hs = BTCeCombinedUpdate();
-            var querey = from mi in hs
-                         where mi.MarketIdentity.StandardisedName == MarketIdent.StandardisedName
-                         select mi;
-            if (querey.Count() > 0)
-                return querey.First();
-            else return null;
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {

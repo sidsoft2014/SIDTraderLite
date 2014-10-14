@@ -19,14 +19,11 @@ namespace Objects
     /// </summary>
     public class API_Cryptsy : IExchange
     {
-        internal CookieContainer cookieJar;
         internal static bool isDownloading = false;
 
         public API_Cryptsy(Exchange exchange)
         {
             this.Exchange = exchange;
-            MarketIds = new Dictionary<string, string>();
-            cookieJar = new CookieContainer();
         }
         ~API_Cryptsy() { ClearKeys(); }
         
@@ -34,8 +31,6 @@ namespace Objects
         {
             return Name.ToUpper();
         }
-        public override ExchangeEnum ExchangeName { get { return ExchangeEnum.Cryptsy; } }
-        public override Dictionary<string, string> MarketIds { get; protected set; }
         public override HashSet<Market> GetAllMarketData()
         {
             if (!isDownloading)
@@ -170,71 +165,6 @@ namespace Objects
             {
                 return this._marketList;
             }
-        }
-        public override Market GetSingleMarket(MarketIdentity MarketIdent)
-        {
-            string json = null;
-            try
-            {
-                json = Task.Run(async () => await GetJsonString(MarketIdent.MarketId)).Result;
-            }
-            catch
-            { }
-
-            var jObj = JObject.Parse(json);
-            var jTok = jObj.GetValue("return");
-
-            var data = jTok.ToObject<SingleMarketOrders>();
-            Market market = new Market(Exchange) { MarketIdentity = MarketIdent };
-            Fee fee = new Fee { Quantity = 0, FeePercentage = 0.25, Market = market, MarketId = market.MarketIdentity.MarketId };
-            
-            market.PriceDecimals = 8;
-            market.QuantDecimals = 8;
-            
-            market.MaxPrice = 0;
-            market.MinPrice = 0.00000001;
-            market.MinQuant = 0;
-            market.Fees.Add(fee);
-            
-            if (data.BuyOrders != null)
-            {
-                foreach (var order in data.BuyOrders)
-                {
-                    double price = 0;
-                    if (order.price != null)
-                        price = (double)order.price;
-
-                    double quant = 0;
-                    if (order.quantity != null)
-                        quant = (double) order.quantity;
-                    Order bO = new Order (OrderType.Bid)
-                    {
-                        Price = price,
-                        Quantity = quant
-                    };
-                    market.OrderBook.BidOrders.Add(bO);
-                }
-            }
-            if (data.SellOrders != null)
-            {
-                foreach (var order in data.SellOrders)
-                {
-                    double price = 0;
-                    if (order.price != null)
-                        price = (double)order.price;
-
-                    double quant = 0;
-                    if (order.quantity != null)
-                        quant = (double)order.quantity;
-                    Order aO = new Order(OrderType.Ask)
-                    {
-                        Price = price,
-                        Quantity = quant
-                    };
-                    market.OrderBook.AskOrders.Add(aO);
-                }
-            }
-            return market;
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {

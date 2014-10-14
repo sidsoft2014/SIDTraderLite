@@ -23,10 +23,16 @@ namespace Objects
     /// </summary>
     public abstract class IExchange
     {
+        internal UInt32 nonce = UnixTime.Now;
+        internal UInt32 GetTheNonce()
+        {
+            return nonce++;
+        }
         internal Exchange Exchange;
         protected internal string _publicKey;
         protected internal HMACSHA512 hmAcSha;
         internal bool? alive;
+        internal CookieContainer cookieJar = new CookieContainer();
 
         internal HashSet<Market> _marketList;
 
@@ -104,11 +110,33 @@ namespace Objects
         /// <summary>
         /// Public market name to market Id dictionary
         /// </summary>
-        public abstract Dictionary<string, string> MarketIds { get; protected set; }
+        public Dictionary<string, string> MarketIds
+        {
+            get
+            {
+                Dictionary<string, string> ids = new Dictionary<string, string>();
+                if (_marketIds == null || _marketIds.Item1 < DateTime.Now.AddHours(-25))
+                {
+                    if (_marketList != null && _marketList.Count > 0)
+                    {
+                        foreach (var mkt in _marketList)
+                        {
+                            if (!ids.ContainsKey(mkt.MarketIdentity.StandardisedName))
+                                ids.Add(mkt.MarketIdentity.StandardisedName, mkt.MarketIdentity.MarketId);
+                        }
+                    }
+                    _marketIds = new Tuple<DateTime, Dictionary<string, string>>(DateTime.Now, ids);
+                }
+                else ids = _marketIds.Item2;
+                return ids;
+            }
+        }
+        private Tuple<DateTime, Dictionary<string, string>> _marketIds;
+
         /// <summary>
         /// Public exchange enum reference
         /// </summary>
-        public abstract ExchangeEnum ExchangeName { get; }
+        public ExchangeEnum ExchangeName { get { return Exchange.Name; } }
         /// <summary>
         /// Public method to convert name given by market to a standardised form
         /// </summary>
@@ -120,12 +148,6 @@ namespace Objects
         /// </summary>
         /// <returns></returns>
         public abstract HashSet<Market> GetAllMarketData();
-        /// <summary>
-        /// Returns the data set for a single market
-        /// </summary>
-        /// <param name="MarketIdent"></param>
-        /// <returns></returns>
-        public abstract Market GetSingleMarket(MarketIdentity MarketIdent);
         /// <summary>
         /// Get order book for a single market
         /// </summary>
