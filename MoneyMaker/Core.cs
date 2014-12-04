@@ -62,8 +62,7 @@ namespace Objects
         private static API_BTCe BTCe;
         private static API_Poloniex Poloniex;
         private static API_Kraken Kraken;
-        //private static API_MintPal MintPal;
-        //private static API_Vircurex Vircurex;
+        private static API_BitcoinCoId BitcoinCoId;
 
         private static Market ActiveMarket;
 
@@ -83,6 +82,7 @@ namespace Objects
 
             string dt = DateTime.Now.ToString();
             lastUpdateTimes = new ConcurrentDictionary<ExchangeEnum, string[]>();
+            lastUpdateTimes.TryAdd(ExchangeEnum.BitCoinCoId, new string[] { "120", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.Bittrex, new string[] { "120", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.BTCe, new string[] { "120", dt });
             lastUpdateTimes.TryAdd(ExchangeEnum.Cryptsy, new string[] { "600", dt });
@@ -767,6 +767,25 @@ namespace Objects
                             }
                         }
                         iex = Bittrex;
+                        break;
+                    }
+                case ExchangeEnum.BitCoinCoId:
+                    {
+                        if (BitcoinCoId == null)
+                        {
+                            BitcoinCoId = new API_BitcoinCoId(exOut);
+                            BitcoinCoId.event_DeclaringApiState += iEx_event_DeclaringApiState;
+                            BitcoinCoId.event_ApiBytesDownloaded += iEx_event_ApiBytesDownloaded;
+
+                            if (CurrentUser.EncryptedKeys.ContainsKey(ExchangeEnum.BitCoinCoId))
+                            {
+                                var items = CurrentUser.EncryptedKeys[ExchangeEnum.BitCoinCoId];
+                                SecureString sspk = EncryptionTools.UserDecrypt(items[0], CurrentUser);
+                                SecureString sssk = EncryptionTools.UserDecrypt(items[1], CurrentUser);
+                                BitcoinCoId.SetKeys(sspk, sssk);
+                            }
+                        }
+                        iex = BitcoinCoId;
                         break;
                     }
                 case ExchangeEnum.BTCe:

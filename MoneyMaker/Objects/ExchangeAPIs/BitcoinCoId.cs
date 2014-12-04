@@ -12,160 +12,82 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Toolbox;
 
-using Json.BTCe;
+using Json.BitcoinCoId;
 
 
 namespace Objects
 {
-    public class API_BTCe : IExchange
+    public class API_BitcoinCoId : IExchange
     {
-       
-        
-        public API_BTCe(Exchange exchange)
+        public API_BitcoinCoId(Exchange exchange)
         {
             this.Exchange = exchange;
-        }
-        ~API_BTCe()
-        {
-            
-        }
+            _marketList = new HashSet<Market>();
 
-        private HashSet<Market> BTCeCombinedUpdate()
-        {
-            var tempMarketsList = new HashSet<Market>();
-            BTCe_GetAllMarketSettings(ref tempMarketsList);
-            BTCe_GetAllOrderBooks(ref tempMarketsList);
-            BTCe_GetAllTradeHistorys(ref tempMarketsList);
-
-            return tempMarketsList;
-        }
-        private void BTCe_GetAllMarketSettings(ref HashSet<Market> tempMarketsList)
-        {
-            string url = @"https://btc-e.com/api/3/info";
-            string json =  tryDownload(url);
-
-            if (!string.IsNullOrEmpty(json))
+            this.MarketIds = new Dictionary<string, string>()
             {
-                GetExcahngeInfo jObject =
-                    JObject.Parse(json).ToObject<GetExcahngeInfo>();
+                {"BTC/IDR", "btc_idr"},
+                {"LTC/BTC", "ltc_btc"},
+                {"DOGE/BTC", "doge_btc"}
+            };
 
-                var marketList = jObject.pairs;
-                foreach (var mkt in marketList)
+            foreach (var item in MarketIds)
+            {
+                string[] curCom = item.Value.ToUpper().Split('_');
+
+                Market market = new Market(Exchange);
+                market.PriceDecimals = 8;
+                market.QuantDecimals = 8;
+                market.MaxPrice = 0;
+                market.MinPrice = 0.00000001;
+                market.MinQuant = 0.00000001;
+
+                Fee fee = new Fee
                 {
-                    string standardName = GetStandardisedName(mkt.Key);
-                    string[] curCom = mkt.Key.ToUpper().Split('_');
+                    Market = market,
+                    MarketId = item.Value,
+                    FeePercentage = 0.3,
+                    Quantity = 0
+                };
+                market.Fees.Add(fee);
 
-                    Market market = new Market(Exchange);
-                    market.PriceDecimals = mkt.Value.decimal_places;
-                    market.QuantDecimals = 8;
-                    market.MaxPrice = mkt.Value.max_price;
-                    market.MinPrice = mkt.Value.min_price;
-                    market.MinQuant = mkt.Value.min_amount;
-                    
-                    Fee fee = new Fee
-                    {
-                        Market = market,
-                        MarketId = mkt.Key,
-                        FeePercentage = mkt.Value.fee,
-                        Quantity = 0
-                    };
-                    market.Fees.Add(fee);
+                MarketIdentity mi = new MarketIdentity(market)
+                {
+                    Commodity = curCom[0],
+                    Currency = curCom[1],
+                    MarketId = item.Value,
+                    Name = item.Value,
+                    StandardisedName = item.Key
+                };
+                market.MarketIdentity = mi;
 
-                    MarketIdentity mi = new MarketIdentity(market)
-                    {
-                        Commodity = curCom[0],
-                        Currency = curCom[1],
-                        MarketId = mkt.Key,
-                        Name = mkt.Key,
-                        StandardisedName = standardName
-                    };
-                    market.MarketIdentity = mi;
-
-                    if (!MarketIds.ContainsKey(standardName))
-                        MarketIds.Add(standardName, mkt.Key);
-                    
-                    tempMarketsList.Add(market);
-                }
+                _marketList.Add(market);
             }
         }
-        private void BTCe_GetAllOrderBooks(ref HashSet<Market> tempMarketsList)
+        ~API_BitcoinCoId()
         {
-            string url = @"https://btc-e.com/api/3/depth/";
-            for (int ii = 0; ii < MarketIds.Count; ii++)
+
+        }
+
+        private HashSet<Market> CombinedUpdate()
+        {
+            GetAllOrderBooks();
+            GetAllTradeHistorys();
+
+            return _marketList;
+        }
+        private void GetAllOrderBooks()
+        {
+            foreach (var m in _marketList)
             {
-                var kvp = MarketIds.ElementAt(ii);
-                if (ii == 0)
-                    url = url + kvp.Value;
-                else
-                    url = String.Format("{0}-{1}", url, kvp.Value);
-            }
-
-            string json = tryDownload(url);
-
-            if (!string.IsNullOrEmpty(json))
-            {
-                Dictionary<string, Depth> ordersList =
-                    JsonConvert.DeserializeObject<Dictionary<string, Depth>>(json);
-
-                for (int ii = 0; ii < ordersList.Count; ii++)
-                {
-                    var kvp = ordersList.ElementAt(ii);
-                    Depth jObject = kvp.Value;
-                    string sName = GetStandardisedName(kvp.Key);
-                    var m = tempMarketsList.First(s => s.MarketIdentity.StandardisedName == sName);
-                    OrderBook oB = new OrderBook();
-                    foreach (var ask in jObject.asks)
-                    {
-                        oB.AskOrders.Add(new Order(OrderType.Ask) { Price = ask[0], Quantity = ask[1] });
-                    }
-                    foreach (var bid in jObject.bids)
-                    {
-                        oB.BidOrders.Add(new Order(OrderType.Bid) { Price = bid[0], Quantity = bid[1] });
-                    }
-                    m.OrderBook = oB;
-                }
+                m.OrderBook = GetSingleMarketOrders(m.MarketIdentity);
             }
         }
-        private void BTCe_GetAllTradeHistorys(ref HashSet<Market> tempMarketsList)
+        private void GetAllTradeHistorys()
         {
-            string url = @"https://btc-e.com/api/3/trades/";
-            for (int ii = 0; ii < MarketIds.Count; ii++)
+            foreach (var m in _marketList)
             {
-                var kvp = MarketIds.ElementAt(ii);
-                if (ii == 0)
-                    url = url + kvp.Value;
-                else
-                    url = String.Format("{0}-{1}", url, kvp.Value);
-            }
-
-            string json = tryDownload(url);
-
-            if (!string.IsNullOrEmpty(json))
-            {
-                Dictionary<string, List<MarketTrades>> jsonTradesList =
-                    JsonConvert.DeserializeObject<Dictionary<string, List<MarketTrades>>>(json);
-
-                for (int ii = 0; ii < jsonTradesList.Count; ii++)
-                {
-                    var kvp = jsonTradesList.ElementAt(ii);
-                    string name = GetStandardisedName(kvp.Key);
-                    Market m = tempMarketsList.First(s => s.MarketIdentity.StandardisedName == name);
-
-                    List<MarketTrades> trades = kvp.Value;
-
-                    trades.Reverse();
-
-                    foreach (var trade in trades)
-                    {
-                        DateTime time = GeneralTools.TimeStampToDateTimeUsingSeconds(trade.timestamp);
-
-                        OrderType type = OrderType.Ask;
-                        if (trade.type == "bid")
-                            type = OrderType.Bid;
-
-                        m.TradeRecords.Push(new TradeRecord() { Price = trade.price, Quantity = trade.amount, TradeTime = time, Type = type });
-                    }
-                }
+                m.TradeRecords = GetSingleMarketTradeHistory(m.MarketIdentity);
             }
         }
 
@@ -175,71 +97,63 @@ namespace Objects
             string[] parts = Name.ToUpper().Split('_');
             string result = string.Format("{0}/{1}", parts[0], parts[1]);
             return result;
-        }        
+        }
         public override HashSet<Market> GetAllMarketData()
         {
-            return BTCeCombinedUpdate();
+            return CombinedUpdate();
         }
         public override OrderBook GetSingleMarketOrders(MarketIdentity MarketIdent)
         {
-            OrderBook ob = new OrderBook();
-            string url = String.Format("https://btc-e.com/api/3/depth/{0}", MarketIdent.MarketId);
+            OrderBook oB = new OrderBook();
+            string url = string.Format("https://vip.bitcoin.co.id/api/{0}/depth/", MarketIdent.MarketId);
 
             string json = tryDownload(url);
 
             if (!string.IsNullOrEmpty(json))
             {
-                Dictionary<string, Depth> ordersList =
-                    JsonConvert.DeserializeObject<Dictionary<string, Depth>>(json);
+                Dictionary<string, Depth> ordersList = new Dictionary<string, Depth>();
 
-                for (int ii = 0; ii < ordersList.Count; ii++)
+                var jObj = JObject.Parse(json);
+                var asks = jObj["sell"];
+                var bids = jObj["buy"];
+
+                foreach (var ask in asks)
                 {
-                    var kvp = ordersList.ElementAt(ii);
-                    Depth jObject = kvp.Value;
-                    foreach (var ask in jObject.asks)
-                    {
-                        ob.AskOrders.Add(new Order(OrderType.Ask) { Price = ask[0], Quantity = ask[1] });
-                    }
-                    foreach (var bid in jObject.bids)
-                    {
-                        ob.BidOrders.Add(new Order(OrderType.Bid) { Price = bid[0], Quantity = bid[1] });
-                    }
+                    oB.AskOrders.Add(new Order(OrderType.Ask) { Price = (double)ask[0], Quantity = (double)ask[1] });
+                }
+                foreach (var bid in bids)
+                {
+                    oB.BidOrders.Add(new Order(OrderType.Bid) { Price = (double)bid[0], Quantity = (double)bid[1] });
                 }
             }
-           
-            return ob;
+            return oB;
         }
         public override Stack<TradeRecord> GetSingleMarketTradeHistory(MarketIdentity MarketIdent)
         {
             Stack<TradeRecord> records = new Stack<TradeRecord>();
 
-            string url = String.Format("https://btc-e.com/api/3/trades/{0}", MarketIdent.MarketId);
+            string url = string.Format("https://vip.bitcoin.co.id/api/{0}/trades/", MarketIdent.MarketId);
 
             string json = tryDownload(url);
 
             if (!string.IsNullOrEmpty(json))
             {
-                Dictionary<string, List<MarketTrades>> jsonTradesList =
-                    JsonConvert.DeserializeObject<Dictionary<string, List<MarketTrades>>>(json);
+                List<MarketTrades> trades = JsonConvert.DeserializeObject<List<MarketTrades>>(json);
 
-                
-
-                for (int ii = 0; ii < jsonTradesList.Count; ii++)
+                foreach (var trade in trades.OrderByDescending(p => p.date))
                 {
-                    var kvp = jsonTradesList.ElementAt(ii);
-                    string name = GetStandardisedName(kvp.Key);
+                    DateTime time = GeneralTools.TimeStampToDateTimeUsingSeconds(trade.date);
 
-                    List<MarketTrades> trades = kvp.Value;
-                    var sortedHist = trades.OrderBy(p => p.timestamp).ToList();
-                    foreach (var trade in sortedHist)
-                    {
-                        DateTime time = GeneralTools.TimeStampToDateTimeUsingSeconds(trade.timestamp);
-                        records.Push(new TradeRecord() { Price = trade.price, Quantity = trade.amount, TradeTime = time });
-                    }
+                    OrderType type = OrderType.Ask;
+                    if (trade.type == "bid")
+                        type = OrderType.Bid;
+
+                    records.Push(new TradeRecord() { Price = trade.price, Quantity = trade.amount, TradeTime = time, Type = type });
                 }
             }
+
             return records;
-        }        
+        }
         public override HashSet<ActiveOrder> GetActiveOrders()
         {
             HashSet<ActiveOrder> orders = new HashSet<ActiveOrder>();
@@ -248,7 +162,7 @@ namespace Objects
                 string json = null;
                 var args = new Dictionary<string, string>()
                 {
-                    {"method", "ActiveOrders"}
+                    {"method", "openOrders"}
                 };
 
                 json = AuthenticatedRequest(args);
@@ -303,7 +217,7 @@ namespace Objects
 
                 if (jObject.success)
                 {
-                    Dictionary<string, double> bals = jObject.balanceInfo.funds;
+                    Dictionary<string, double> bals = jObject.balanceInfo.balance;
                     foreach (var kvp in bals)
                     {
                         balances.Add(new Balance
@@ -401,14 +315,14 @@ namespace Objects
             orderinfo.Add("nonce", GetTheNonce().ToString());
             string postData = BuildPostData(orderinfo);
             byte[] messagebyte = Encoding.ASCII.GetBytes(postData);
-            
+
             byte[] hashmessage = hmAcSha.ComputeHash(messagebyte);
             string sign = BitConverter.ToString(hashmessage);
             sign = sign.Replace("-", "");
 
             string json = String.Empty;
 
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://btc-e.com/tapi");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://vip.bitcoin.co.id/tapi");
             request.CookieContainer = cookieJar;
             request.UserAgent = "Mozilla/5.0 (.NET CLR 3.5.30729)";
             request.ContentType = "application/x-www-form-urlencoded";

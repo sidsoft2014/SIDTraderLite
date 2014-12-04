@@ -130,6 +130,10 @@ namespace Objects
                 else ids = _marketIds.Item2;
                 return ids;
             }
+            set
+            {
+                _marketIds = new Tuple<DateTime, Dictionary<string, string>>(DateTime.Now, value);
+            }
         }
         private Tuple<DateTime, Dictionary<string, string>> _marketIds;
 

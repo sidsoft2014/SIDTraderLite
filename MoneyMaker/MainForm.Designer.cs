@@ -138,6 +138,8 @@
             this.lvC_Info = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.donationForm1 = new Donate.DonationForm();
+            this.toolStrip_Settings = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton_EditKeys = new System.Windows.Forms.ToolStripButton();
             this.toolStrip_Apis = new System.Windows.Forms.ToolStrip();
             this.ApiIndicator_Bittrex = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_BTCe = new System.Windows.Forms.ToolStripButton();
@@ -145,8 +147,6 @@
             this.ApiIndicator_Kraken = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_MintPal = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Poloniex = new System.Windows.Forms.ToolStripButton();
-            this.toolStrip_Settings = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton_EditKeys = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer_Main.BottomToolStripPanel.SuspendLayout();
             this.toolStripContainer_Main.ContentPanel.SuspendLayout();
             this.toolStripContainer_Main.TopToolStripPanel.SuspendLayout();
@@ -186,8 +186,8 @@
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.tabPage6.SuspendLayout();
-            this.toolStrip_Apis.SuspendLayout();
             this.toolStrip_Settings.SuspendLayout();
+            this.toolStrip_Apis.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStripContainer_Main
@@ -1398,6 +1398,28 @@
             this.donationForm1.Size = new System.Drawing.Size(338, 218);
             this.donationForm1.TabIndex = 0;
             // 
+            // toolStrip_Settings
+            // 
+            this.toolStrip_Settings.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip_Settings.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton_EditKeys});
+            this.toolStrip_Settings.Location = new System.Drawing.Point(3, 0);
+            this.toolStrip_Settings.Name = "toolStrip_Settings";
+            this.toolStrip_Settings.Size = new System.Drawing.Size(35, 25);
+            this.toolStrip_Settings.TabIndex = 0;
+            // 
+            // toolStripButton_EditKeys
+            // 
+            this.toolStripButton_EditKeys.BackColor = System.Drawing.SystemColors.Control;
+            this.toolStripButton_EditKeys.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton_EditKeys.Image = global::Objects.Properties.Resources.key_128;
+            this.toolStripButton_EditKeys.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton_EditKeys.Name = "toolStripButton_EditKeys";
+            this.toolStripButton_EditKeys.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton_EditKeys.Text = "Set Keys";
+            this.toolStripButton_EditKeys.ToolTipText = "Set Keys";
+            this.toolStripButton_EditKeys.Click += new System.EventHandler(this.button_EditKeys_Click);
+            // 
             // toolStrip_Apis
             // 
             this.toolStrip_Apis.Dock = System.Windows.Forms.DockStyle.None;
@@ -1410,7 +1432,7 @@
             this.ApiIndicator_Poloniex});
             this.toolStrip_Apis.Location = new System.Drawing.Point(38, 0);
             this.toolStrip_Apis.Name = "toolStrip_Apis";
-            this.toolStrip_Apis.Size = new System.Drawing.Size(181, 25);
+            this.toolStrip_Apis.Size = new System.Drawing.Size(150, 25);
             this.toolStrip_Apis.TabIndex = 1;
             // 
             // ApiIndicator_Bittrex
@@ -1479,28 +1501,6 @@
             this.ApiIndicator_Poloniex.ToolTipText = "Force Update (Poloniex)";
             this.ApiIndicator_Poloniex.Click += new System.EventHandler(this.ApiIndicator_Poloniex_Click);
             // 
-            // toolStrip_Settings
-            // 
-            this.toolStrip_Settings.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip_Settings.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton_EditKeys});
-            this.toolStrip_Settings.Location = new System.Drawing.Point(3, 0);
-            this.toolStrip_Settings.Name = "toolStrip_Settings";
-            this.toolStrip_Settings.Size = new System.Drawing.Size(35, 25);
-            this.toolStrip_Settings.TabIndex = 0;
-            // 
-            // toolStripButton_EditKeys
-            // 
-            this.toolStripButton_EditKeys.BackColor = System.Drawing.SystemColors.Control;
-            this.toolStripButton_EditKeys.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton_EditKeys.Image = global::Objects.Properties.Resources.key_128;
-            this.toolStripButton_EditKeys.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton_EditKeys.Name = "toolStripButton_EditKeys";
-            this.toolStripButton_EditKeys.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton_EditKeys.Text = "Set Keys";
-            this.toolStripButton_EditKeys.ToolTipText = "Set Keys";
-            this.toolStripButton_EditKeys.Click += new System.EventHandler(this.button_EditKeys_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1561,10 +1561,10 @@
             this.tabPage4.PerformLayout();
             this.tabPage5.ResumeLayout(false);
             this.tabPage6.ResumeLayout(false);
-            this.toolStrip_Apis.ResumeLayout(false);
-            this.toolStrip_Apis.PerformLayout();
             this.toolStrip_Settings.ResumeLayout(false);
             this.toolStrip_Settings.PerformLayout();
+            this.toolStrip_Apis.ResumeLayout(false);
+            this.toolStrip_Apis.PerformLayout();
             this.ResumeLayout(false);
 
         }

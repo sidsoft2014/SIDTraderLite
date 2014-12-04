@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SIDTraderLite", "MoneyMaker\SIDTraderLite.csproj", "{6E6FDE58-6431-4BE4-8ACD-00E49A3604A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SidChart", "D:\Coding\VS Plugins\DLLs\SourceProjects\StockCharts\StockCharts\SidChart.csproj", "{6C08B789-900B-43EC-9F5D-ED17F3C15836}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{6E6FDE58-6431-4BE4-8ACD-00E49A3604A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E6FDE58-6431-4BE4-8ACD-00E49A3604A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E6FDE58-6431-4BE4-8ACD-00E49A3604A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C08B789-900B-43EC-9F5D-ED17F3C15836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C08B789-900B-43EC-9F5D-ED17F3C15836}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C08B789-900B-43EC-9F5D-ED17F3C15836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C08B789-900B-43EC-9F5D-ED17F3C15836}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

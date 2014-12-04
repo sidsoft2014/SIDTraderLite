@@ -46,6 +46,7 @@ namespace Objects
 
         private static readonly Dictionary<ExchangeEnum, string> defaultGaps = new Dictionary<ExchangeEnum, string>()
         {
+            {ExchangeEnum.BitCoinCoId, "120"},
             {ExchangeEnum.Bittrex, "120"},
             {ExchangeEnum.BTCe, "120"},
             {ExchangeEnum.Cryptsy, "600"},
@@ -447,16 +448,16 @@ namespace Objects
 
         private void label_CommodityBalance_Click(object sender, EventArgs e)
         {
-            if (dataGridView_OrderBookBids.RowCount > 0)
+            ///As this is a check on selling all the commodity, the quantity
+            ///is simply the balance available for the commodity
+            double quant = commodityBalance;
+
+            if (dataGridView_OrderBookBids.RowCount > 0 && quant > 0)
             {
                 ///First get price of top bid incase no other price is set
                 decimal prc;
                 Decimal.TryParse(dataGridView_OrderBookBids.Rows[0].Cells[0].Value.ToString(), out prc);
-
-                ///As this is a check on selling all the commodity, the quantity
-                ///is simply the balance available for the commodity
-                double quant = commodityBalance;
-
+                
                 ///Check if a price has been set in text box
                 ///and if so switch the price to this one
                 if (textBox_SellPrice.Value > 0)
@@ -482,7 +483,9 @@ namespace Objects
         }
         private void label_CurrencyBalance_Click(object sender, EventArgs e)
         {
-            if (dataGridView_OrderBookAsks.RowCount > 0)
+            decimal bal = Convert.ToDecimal(currencyBalance);
+
+            if (dataGridView_OrderBookAsks.RowCount > 0 && bal > 0)
             {
                 ///First check if user has set a price,
                 ///if not grab best price from asks order book.                
@@ -494,7 +497,6 @@ namespace Objects
 
                 if (prc > 0)
                 {
-                    decimal bal = Convert.ToDecimal(currencyBalance);
                     double apxAmt = Convert.ToDouble(bal / prc);
 
                     var feePct = ActiveMarket.GetFee(apxAmt);

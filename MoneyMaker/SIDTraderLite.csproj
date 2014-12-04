@@ -94,10 +94,6 @@
     <Reference Include="Pusher.Connections.Net">
       <HintPath>..\packages\PusherNET.0.3.1\lib\net45\Pusher.Connections.Net.dll</HintPath>
     </Reference>
-    <Reference Include="StockCharts, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\Coding\VS Plugins\DLLs\Release Folder\StockCharts\StockCharts.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net" />
@@ -148,9 +144,11 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Objects\CoreMessageHeader.cs" />
+    <Compile Include="Objects\ExchangeAPIs\BitcoinCoId.cs" />
     <Compile Include="Objects\ExchangeAPIs\Bittrex.cs" />
     <Compile Include="Objects\ExchangeAPIs\BTCe.cs" />
     <Compile Include="Objects\ExchangeAPIs\Cryptsy.cs" />
+    <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_BitcoinCoId.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Bittrex.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_BTCe.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Cryptsy.cs" />
@@ -294,6 +292,12 @@
     <Content Include="dollar.ico" />
     <None Include="Resources\icon-bittrex.png" />
     <EmbeddedResource Include="Resources\logo-bittrex.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="D:\Coding\VS Plugins\DLLs\SourceProjects\StockCharts\StockCharts\SidChart.csproj">
+      <Project>{6c08b789-900b-43ec-9f5d-ed17f3c15836}</Project>
+      <Name>SidChart</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
