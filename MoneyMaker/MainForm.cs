@@ -838,7 +838,12 @@ namespace Objects
                     break;
                 case OrderType.Bid:
                     price = Convert.ToDouble(textBox_BuyPrice.Value);
-                    quant = Convert.ToDouble(textBox_BuyQuant.Value);
+
+                    if(ActiveExchangeName == ExchangeEnum.BitCoinCoId)
+                        quant = Convert.ToDouble(textBox_BuyTotal.Text);
+                    else
+                        quant = Convert.ToDouble(textBox_BuyQuant.Value);
+
                     break;
             }
             string resp = Core.PlaceOrderAsync(basicOrderEnum, price, quant)[1];

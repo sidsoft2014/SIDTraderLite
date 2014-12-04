@@ -121,19 +121,14 @@ namespace Json.BitcoinCoId
     public class ActiveOrdersRoot
     {
         [JsonProperty("success")]
-        public bool Success { get; set; }
+        public int Success { get; set; }
 
         [JsonProperty("return")]
-        public Dictionary<string, ActiveOrders> OpenOrders { get; set; }
+        public OrderList OpenOrders { get; set; }
     }
-    public class ActiveOrders
+    public class OrderList
     {
-        public string pair { get; set; }
-        public string type { get; set; }
-        public double amount { get; set; }
-        public double rate { get; set; }
-        public int timestamp_created { get; set; }
-        public int status { get; set; }
+        public List<Dictionary<string, string>> orders { get; set; }
     }
     /// <summary>
     /// Trade
@@ -147,10 +142,8 @@ namespace Json.BitcoinCoId
     /// </summary>
     public class TradeResponse
     {
-        public double received { get; set; }
-        public int remains { get; set; }
         public int order_id { get; set; }
-        public Dictionary<string, double> funds { get; set; }
+        public Dictionary<string, double> balance { get; set; }
     }
     /// <summary>
     /// BTCe Ticker JSON

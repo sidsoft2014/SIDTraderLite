@@ -160,41 +160,57 @@ namespace Objects
             if (ApiActive && HasKeys)
             {
                 string json = null;
-                var args = new Dictionary<string, string>()
+                foreach (var key in MarketIds)
                 {
-                    {"method", "openOrders"}
-                };
-
-                json = AuthenticatedRequest(args);
-                if (!string.IsNullOrEmpty(json))
-                {
-                    ActiveOrdersRoot jObject =
-                        JObject.Parse(json).ToObject<ActiveOrdersRoot>();
-
-                    if (jObject.Success)
+                    var args = new Dictionary<string, string>()
                     {
-                        Dictionary<string, ActiveOrders> jOutput = jObject.OpenOrders as Dictionary<string, ActiveOrders>;
+                        {"method", "openOrders"},
+                        {"pair", key.Value}
+                    };
 
-                        for (int ii = 0; ii < jOutput.Count; ii++)
+                    json = AuthenticatedRequest(args);
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        ActiveOrdersRoot jObj = JObject.Parse(json).ToObject<ActiveOrdersRoot>();
+
+                        if (jObj.Success == 1)
                         {
-                            var joo = jOutput.ElementAt(ii);
+                            var jOutput = jObj.OpenOrders.orders;
 
-                            var dt = GeneralTools.TimeStampToDateTimeUsingSeconds(joo.Value.timestamp_created);
-
-                            OrderType type = OrderType.Bid;
-                            if (joo.Value.type == "sell")
-                                type = OrderType.Ask;
-
-                            ActiveOrder row = new ActiveOrder(ExchangeName, joo.Value.pair)
+                            for (int ii = 0; ii < jOutput.Count; ii++)
                             {
-                                Price = (double)joo.Value.rate,
-                                Quantity = (double)joo.Value.amount,
-                                Remaining = Double.NaN,
-                                OrderId = joo.Key,
-                                OrderType = type,
-                                Created = dt
-                            };
-                            orders.Add(row);
+                                var joo = jOutput.ElementAt(ii);
+
+                                double quant = 0;
+                                double rem = 0;
+                                if (key.Value == "btc_idr")
+                                {
+                                    quant = Convert.ToDouble(joo["order_idr"]);
+                                    rem = Convert.ToDouble(joo["remain_idr"]);
+                                }
+                                else
+                                {
+                                    quant = Convert.ToDouble(joo["order_btc"]);
+                                    rem = Convert.ToDouble(joo["remain_btc"]);
+                                }
+
+                                var dt = GeneralTools.TimeStampToDateTimeUsingSeconds(Convert.ToInt64(joo["submit_time"]));
+
+                                OrderType type = OrderType.Bid;
+                                if (joo["type"] == "sell")
+                                    type = OrderType.Ask;
+
+                                ActiveOrder row = new ActiveOrder(ExchangeName, joo["order_id"])
+                                {
+                                    Price = Convert.ToDouble(joo["price"]),
+                                    Quantity = quant,
+                                    Remaining = rem,
+                                    OrderId = joo["order_id"],
+                                    OrderType = type,
+                                    Created = dt
+                                };
+                                orders.Add(row);
+                            }
                         }
                     }
                 }
@@ -213,20 +229,11 @@ namespace Objects
                 };
                 string json = AuthenticatedRequest(args);
 
-                var jObject = JsonConvert.DeserializeObject<JsonFields_BTCe_GetInfoRoot>(json);
-
-                if (jObject.success)
+                var jObject = JObject.Parse(json).GetValue("return").First();
+                foreach (var item in jObject)
                 {
-                    Dictionary<string, double> bals = jObject.balanceInfo.balance;
-                    foreach (var kvp in bals)
-                    {
-                        balances.Add(new Balance
-                        {
-                            Exchange = this.Exchange,
-                            Name = kvp.Key.ToUpper(),
-                            Available = kvp.Value
-                        });
-                    }
+                    Tuple<string, double> bal = item.ToObject<Tuple<string, double>>();
+                    balances.Add(new Balance { Exchange = this.Exchange, Name = bal.Item1, Available = bal.Item2 });
                 }
             }
             return balances;
@@ -241,24 +248,40 @@ namespace Objects
                 if (Type == OrderType.Ask)
                     type = "sell";
 
-                var args = new Dictionary<string, string>()
+                string q = null;
+                switch (Type)
                 {
-                    { "method", "Trade" },
-                    { "pair", MarketIdent.MarketId },
-                    { "type", type },
-                    { "rate", Price.ToString()},
-                    { "amount", Quantity.ToString()}
-                };
+                    case OrderType.Ask:
+                        q = MarketIdent.Commodity.ToLower();
+                        break;
+                    case OrderType.Bid:
+                        q = MarketIdent.Currency.ToLower();
+                        break;
+                    default:
+                        break;
+                }
 
-                string response = AuthenticatedRequest(args);
-                if (response != null)
+                if (q != null)
                 {
-                    var jObj = JObject.Parse(response);
-                    if (jObj.GetValue("success").ToObject<Int16>() == 1)
+                    var args = new Dictionary<string, string>()
                     {
-                        var fields = jObj.GetValue("return").ToObject<TradeResponse>();
-                        string msg = string.Format("Order placed: {0}", fields.order_id);
-                        result = new Tuple<string, string>(fields.order_id.ToString(), msg);
+                        { "method", "Trade" },
+                        { "pair", MarketIdent.MarketId },
+                        { "type", type },
+                        { "price", Price.ToString()},
+                        { q, Quantity.ToString()}
+                    };
+
+                    string response = AuthenticatedRequest(args);
+                    if (response != null)
+                    {
+                        var jObj = JObject.Parse(response);
+                        if (jObj.GetValue("success").ToObject<Int16>() == 1)
+                        {
+                            var fields = jObj.GetValue("return").ToObject<TradeResponse>();
+                            string msg = string.Format("Order placed: {0}", fields.order_id);
+                            result = new Tuple<string, string>(fields.order_id.ToString(), msg);
+                        }
                     }
                 }
             }
