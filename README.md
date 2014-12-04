@@ -40,12 +40,6 @@ Each exchange can be updated from it's default update period of a few minutes to
 -Big Red 'Wipe' Button<br>
 Last on the list, for added security there is a big red button that will wipe all stored user data instantly.<br>
 <br><br>
-Planned future features:<br>
-- MintPal API integration<br>
-- Vircurex API integration<br>
-- Timed orders\Time limited conditional orders <br>
-- User history<br>
-<br><br>
 Screenshots of the application can be found here - http://imgur.com/a/F2cnx<br>
 A pre-compiled download of the application can be found here - https://mega.co.nz/#!a4EWhSCJ!KoJnPGaEpNmN_oo2VPD8KFMikLi5M0SwmAfgiAGN5ZY<br>
 <br><br>
