@@ -42,7 +42,7 @@ Each exchange can be updated from it's default update period of a few minutes to
 Last on the list, for added security there is a big red button that will wipe all stored user data instantly.<br>
 <br><br>
 Screenshots of the application can be found here - http://imgur.com/a/F2cnx<br>
-A pre-compiled download of the application can be found here - https://mega.co.nz/#!iwEUEDqC!xJb9pMkZgsDyvU1osVKTS-thocF2Zo0vo12SCKaRflc<br>
+A pre-compiled download of the application can be found here - https://mega.co.nz/#!jhdx1B6A!wE6I8Yvy_KYas0CuJNWM9Ie53jLsOJWp2j_nSq6-vdY<br>
 <br><br>
 If you would like to support this project please donate by one of the following:<br>
 BTC: 115yMHN1jKXPjnoupWtbo2CgvTMzGWadhi <br>
