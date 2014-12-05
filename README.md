@@ -5,6 +5,7 @@ SIDTraderLite is a simple, lightweight crypto-currency trading platform supporti
 <br>
 <br>
 Currently supported exchanges are:<br>
+-Bitcoin.co.id(Bitcoin Indonesia)(not fully tested) <br>
 -Bittrex<br>
 -BTCe<br>
 -Cryptsy<br>
@@ -41,7 +42,11 @@ Each exchange can be updated from it's default update period of a few minutes to
 Last on the list, for added security there is a big red button that will wipe all stored user data instantly.<br>
 <br><br>
 Screenshots of the application can be found here - http://imgur.com/a/F2cnx<br>
-A pre-compiled download of the application can be found here - https://mega.co.nz/#!a4EWhSCJ!KoJnPGaEpNmN_oo2VPD8KFMikLi5M0SwmAfgiAGN5ZY<br>
+A pre-compiled download of the application can be found here - https://mega.co.nz/#!iwEUEDqC!xJb9pMkZgsDyvU1osVKTS-thocF2Zo0vo12SCKaRflc<br>
 <br><br>
+If you would like to support this project please donate by one of the following:<br>
+BTC: 115yMHN1jKXPjnoupWtbo2CgvTMzGWadhi <br>
+LTC: Lda287GxurnU18TCb6yjrZidEnXbNDDRXQ <br>
+DOGE: DM9WiKU1zY5M2wb2yJodzwKKohJ1A2uN1x <br><br>
 Finally.....<br>
 The library's and classes in this project may be freely used in your own non-commercial projects without limitation. If you would like to use any parts of this project in a new commercial product please contact me via the email included in the user guide first.
