@@ -171,15 +171,14 @@ namespace Objects
                     json = AuthenticatedRequest(args);
                     if (!string.IsNullOrEmpty(json))
                     {
-                        ActiveOrdersRoot jObj = JObject.Parse(json).ToObject<ActiveOrdersRoot>();
+                        var jObj = JObject.Parse(json).GetValue("return").ToObject<ActiveOrderList>();
+                        var success = JObject.Parse(json).GetValue("success").ToString();
 
-                        if (jObj.Success == 1)
+                        if (success == "1")
                         {
-                            var jOutput = jObj.OpenOrders.orders;
-
-                            for (int ii = 0; ii < jOutput.Count; ii++)
+                            for (int ii = 0; ii < jObj.orders.Count; ii++)
                             {
-                                var joo = jOutput.ElementAt(ii);
+                                var joo = jObj.orders.ElementAt(ii);
 
                                 double quant = 0;
                                 double rem = 0;
@@ -194,7 +193,14 @@ namespace Objects
                                     rem = Convert.ToDouble(joo["remain_btc"]);
                                 }
 
-                                var dt = GeneralTools.TimeStampToDateTimeUsingSeconds(Convert.ToInt64(joo["submit_time"]));
+                                DateTime dt = DateTime.Now;
+                                ///Surrounded with try catch in case conversion fails
+                                try
+                                {
+                                    dt = GeneralTools.TimeStampToDateTimeUsingSeconds(Convert.ToInt64(joo["submit_time"]));
+                                }
+                                catch { }
+                                
 
                                 OrderType type = OrderType.Bid;
                                 if (joo["type"] == "sell")
@@ -229,11 +235,11 @@ namespace Objects
                 };
                 string json = AuthenticatedRequest(args);
 
-                var jObject = JObject.Parse(json).GetValue("return").First();
-                foreach (var item in jObject)
+                var jObject = JObject.Parse(json).GetValue("return").ToObject<GetInfo>();
+
+                foreach (var item in jObject.balance)
                 {
-                    Tuple<string, double> bal = item.ToObject<Tuple<string, double>>();
-                    balances.Add(new Balance { Exchange = this.Exchange, Name = bal.Item1, Available = bal.Item2 });
+                    balances.Add(new Balance { Exchange = this.Exchange, Name = item.Key, Available = item.Value });
                 }
             }
             return balances;
@@ -288,16 +294,23 @@ namespace Objects
 
             return result;
         }
-        public override string CancelOrder(string OrderId, string MarketId = null)
+        public override string CancelOrder(ActiveOrder orderObj)
         {
             string result = null;
 
             if (ApiActive && HasKeys)
             {
+                string type = orderObj.OrderType.ToString().ToLowerInvariant();
+                
+                if(type == "ask")
+                    type = "sell";
+                else type = "buy";
+
                 var args = new Dictionary<string, string>()
                 {
-                    {"method", "CancelOrder"},
-                    {"order_id", OrderId}
+                    {"method", "cancelOrder"},
+                    {"order_id", orderObj.OrderId},
+                    {"type", type}
                 };
 
                 string response = AuthenticatedRequest(args);
@@ -306,9 +319,13 @@ namespace Objects
 
                 if (success == 1)
                 {
-                    var ordId = jObj.GetValue("return").First().ToString();
-                    string id = ordId.Split(':')[1];
-                    result = string.Format("Order {0} has been cancelled", id);
+                    string ordId = "Order";
+                    try
+                    {
+                        ordId = jObj.GetValue("return").First().ToString();
+                    }
+                    catch { }
+                    result = string.Format("{0} has been cancelled", ordId);
                 }
             }
 

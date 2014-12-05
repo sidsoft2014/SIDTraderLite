@@ -44,9 +44,9 @@ namespace Objects
             selectedExchange = ExchangeEnum.Kraken;
             UpdateUI();
         }
-        private void button_Mint_Click(object sender, EventArgs e)
+        private void button_BitCoinCoId_Click(object sender, EventArgs e)
         {
-            selectedExchange = ExchangeEnum.MintPal;
+            selectedExchange = ExchangeEnum.BitCoinCoId;
             UpdateUI();
         }
         private void button_Bittrex_Click(object sender, EventArgs e)

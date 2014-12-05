@@ -450,20 +450,20 @@ namespace Objects
             }
             return result;
         }
-        public override String CancelOrder(string OrderId, string MarketId = null)
+        public override String CancelOrder(ActiveOrder orderObj)
         {
             string request = null;
             string result = null;
 
             if (ApiActive && HasKeys)
             {
-                if (OrderId == "All")
+                if (orderObj.OrderId == "All")
                 {
                     request = "cancelallorders";
                 }
                 else
                 {
-                    request = String.Format("cancelorder&orderid={0}", OrderId);
+                    request = String.Format("cancelorder&orderid={0}", orderObj.OrderId);
                 }
                 try
                 {

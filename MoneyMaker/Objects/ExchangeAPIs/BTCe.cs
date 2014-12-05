@@ -351,7 +351,7 @@ namespace Objects
 
             return result;
         }
-        public override string CancelOrder(string OrderId, string MarketId = null)
+        public override string CancelOrder(ActiveOrder orderObj)
         {
             string result = null;
 
@@ -360,7 +360,7 @@ namespace Objects
                 var args = new Dictionary<string, string>()
                 {
                     {"method", "CancelOrder"},
-                    {"order_id", OrderId}
+                    {"order_id", orderObj.OrderId}
                 };
 
                 string response = AuthenticatedRequest(args);

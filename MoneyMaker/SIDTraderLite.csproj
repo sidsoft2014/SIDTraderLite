@@ -26,7 +26,7 @@
     <ProductName>SID Trader Lite</ProductName>
     <PublisherName>SidSoft</PublisherName>
     <SuiteName>SID Trader</SuiteName>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>5</ApplicationRevision>
     <ApplicationVersion>1.0.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -153,13 +153,10 @@
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_BTCe.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Cryptsy.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Kraken.cs" />
-    <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Mint.cs" />
     <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Poloniex.cs" />
-    <Compile Include="Objects\ExchangeAPIs\Json\JsonFields_Vircurex.cs" />
     <None Include="Objects\ExchangeAPIs\Template.cs" />
     <Compile Include="Objects\ExchangeAPIs\Kraken.cs" />
     <Compile Include="Objects\ExchangeAPIs\KrakenErrorEnums.cs" />
-    <Compile Include="Objects\ExchangeAPIs\MintPal.cs" />
     <Compile Include="Objects\ExchangeAPIs\Poloniex.cs" />
     <Compile Include="Objects\ExchangeObjects\ActiveOrder.cs" />
     <Compile Include="Objects\ExchangeObjects\Order.cs" />
@@ -290,6 +287,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="dollar.ico" />
+    <EmbeddedResource Include="Resources\coId.png" />
+    <EmbeddedResource Include="Resources\logobtc.png" />
     <None Include="Resources\icon-bittrex.png" />
     <EmbeddedResource Include="Resources\logo-bittrex.png" />
   </ItemGroup>
@@ -299,6 +298,7 @@
       <Name>SidChart</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">

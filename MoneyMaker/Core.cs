@@ -335,9 +335,9 @@ namespace Objects
             string[] result = PlaceOrder(exName, ActiveMarket.MarketIdentity, Type, Price, Quantity);
             return result;
         }
-        public static string CancelOrderAsync(ExchangeEnum exName, string orderId, string marketId)
+        public static string CancelOrderAsync(ExchangeEnum exName, ActiveOrder orderObj)
         {
-            string result = CancelOrder(exName, orderId, marketId);
+            string result = CancelOrder(exName, orderObj);
             return result;
         }
 
@@ -1046,17 +1046,17 @@ namespace Objects
             }
         }
 
-        private static string CancelOrder(ExchangeEnum exName, string OrderId, string MarketIdent = null)
+        private static string CancelOrder(ExchangeEnum exName, ActiveOrder orderObj)
         {
             string result = "No Order To Cancel";
-            if (OrderId != null)
+            if (orderObj != null)
             {
                 Exchange ex;
                 IExchange ordEx = SwitchExchange(exName, out ex);
 
-                result = ordEx.CancelOrder(OrderId, MarketIdent);
+                result = ordEx.CancelOrder(orderObj);
 
-                Task.Factory.StartNew(() => PostOrderUpdate(MarketIdent, ex, ordEx));
+                Task.Factory.StartNew(() => PostOrderUpdate(orderObj.MarketId, ex, ordEx));
             }
             return result;
         }

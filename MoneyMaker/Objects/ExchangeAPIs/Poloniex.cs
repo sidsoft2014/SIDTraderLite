@@ -356,15 +356,15 @@ namespace Objects
 
             return result;
         }
-        public override string CancelOrder(string OrderId, string MarketId)
+        public override string CancelOrder(ActiveOrder orderObj)
         {
             string json = null;
 
             if (ApiActive && HasKeys)
             {
                 Dictionary<string, string> paramList = new Dictionary<string, string>();
-                paramList.Add("currencyPair", MarketId);
-                paramList.Add("orderNumber", OrderId);
+                paramList.Add("currencyPair", orderObj.MarketId);
+                paramList.Add("orderNumber", orderObj.OrderId);
                 json = AuthenticatedRequest("cancelOrder", paramList);
             }
 

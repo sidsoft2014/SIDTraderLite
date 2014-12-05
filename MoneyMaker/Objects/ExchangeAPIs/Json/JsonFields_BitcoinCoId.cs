@@ -61,16 +61,6 @@ namespace Json.BitcoinCoId
     /// <summary>
     /// TransHistory
     /// It returns the transactions history.
-    /// Parameters:
-    /// parameter	oblig?	description	it takes on the values	standard value
-    /// from	No	The ID of the transaction to start displaying with	numerical	0
-    /// count	No	The number of transactions for displaying	numerical	1,000
-    /// from_id	No	The ID of the transaction to start displaying with	numerical	0
-    /// end_id	No	The ID of the transaction to finish displaying with	numerical	∞
-    /// order	No	sorting	ASC or DESC	DESC
-    /// since	No	When to start displaying?	UNIX time	0
-    /// end	No	When to finish displaying?	UNIX time	∞
-    /// Note: while using since or end parameters, the order parameter automatically take up ASC value.
     /// </summary>
     public class TransHistory
     {
@@ -124,21 +114,14 @@ namespace Json.BitcoinCoId
         public int Success { get; set; }
 
         [JsonProperty("return")]
-        public OrderList OpenOrders { get; set; }
+        public ActiveOrderList OpenOrders { get; set; }
     }
-    public class OrderList
+    public class ActiveOrderList
     {
         public List<Dictionary<string, string>> orders { get; set; }
     }
     /// <summary>
-    /// Trade
-    /// Trading is done according to this method.
-    /// Parameters:
-    /// parameter	oblig?	description	                                it takes up the values	standard value
-    /// pair	    Yes	    pair	                                    btc_usd (example)	    -
-    /// type	    Yes	    The transaction type	                    buy or sell	            -
-    /// rate	    Yes	    The rate to buy/sell	                    numerical	            -
-    /// amount	    Yes	    The amount which is necessary to buy/sell	numerical	            -
+    /// Trade Response
     /// </summary>
     public class TradeResponse
     {

@@ -274,8 +274,12 @@ namespace Objects
             if (e.RowIndex >= 0)
             {
                 var orderId = dataGridView_ActiveOrders.Rows[e.RowIndex].Cells[0].Value.ToString();
-                SelectedActiveOrder = ActiveOrderTables[ActiveExchangeName].First(p => p.OrderId == orderId);
-                textBox_CancelOrderId.Text = orderId;
+                try
+                {
+                    SelectedActiveOrder = ActiveOrderTables[ActiveExchangeName].First(p => p.OrderId == orderId);
+                    textBox_CancelOrderId.Text = orderId;
+                }
+                catch { }
             }
         }
         #endregion
@@ -389,7 +393,7 @@ namespace Objects
                 MessageBox.Show("No order selected to cancel.");
             }
 
-            string result = CancelOrder(ActiveExchangeName, OrderId, SelectedActiveOrder.MarketId);
+            string result = CancelOrder(ActiveExchangeName, SelectedActiveOrder);
             UpdateStatusLabel(result);
             textBox_CancelOrderId.Text = "";
             GetBalances();
@@ -854,9 +858,9 @@ namespace Objects
             ///done from Core and sent via an event
             GetBalances();
         }
-        private string CancelOrder(ExchangeEnum exch, string OrderId, string marketName)
+        private string CancelOrder(ExchangeEnum exch, ActiveOrder orderObject)
         {
-            string result = Core.CancelOrderAsync(exch, OrderId, marketName);
+            string result = Core.CancelOrderAsync(exch, orderObject);
             return result;
         }
         #endregion
@@ -961,6 +965,18 @@ namespace Objects
             {
                 switch (e.ApiStateChange.Item1)
                 {
+                    case ExchangeEnum.BitCoinCoId:
+                        {
+                            if (e.ApiStateChange.Item2 == true)
+                            {
+                                ApiIndicator_BitCoinCoId.BackColor = colourOk;
+                            }
+                            else
+                            {
+                                ApiIndicator_BitCoinCoId.BackColor = colourError;
+                            }
+                            break;
+                        }
                     case ExchangeEnum.Bittrex:
                         {
                             if (e.ApiStateChange.Item2 == true)
@@ -1006,18 +1022,6 @@ namespace Objects
                             else
                             {
                                 ApiIndicator_Kraken.BackColor = colourError;
-                            }
-                            break;
-                        }
-                    case ExchangeEnum.MintPal:
-                        {
-                            if (e.ApiStateChange.Item2 == true)
-                            {
-                                ApiIndicator_MintPal.BackColor = colourOk;
-                            }
-                            else
-                            {
-                                ApiIndicator_MintPal.BackColor = colourError;
                             }
                             break;
                         }
@@ -1574,6 +1578,17 @@ namespace Objects
         {
             Core.EditUserKeys();
         }
+        private async void ApiIndicator_BitCoinCoId_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await Core.ForceUpdate(ExchangeEnum.BitCoinCoId, "All");
+            }
+            catch
+            {
+                UpdateStatusLabel("Can't update BitcoinCoId.");
+            }
+        }
         private async void ApiIndicator_Cryptsy_Click(object sender, EventArgs e)
         {
             try
@@ -1607,17 +1622,6 @@ namespace Objects
                 UpdateStatusLabel("Can't update Kraken.");
             }
         }
-        private async void ApiIndicator_MintPal_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                await Core.ForceUpdate(ExchangeEnum.MintPal, "All");
-            }
-            catch
-            {
-                UpdateStatusLabel("Can't update MintPal.");
-            }
-        }
         private async void ApiIndicator_Poloniex_Click(object sender, EventArgs e)
         {
             try
@@ -1648,6 +1652,7 @@ namespace Objects
             toolStripLabel_Status.Text = "Closing";
             Core.CloseCore();
         }
+
 
     }
 }

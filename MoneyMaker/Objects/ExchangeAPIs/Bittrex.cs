@@ -235,7 +235,7 @@ namespace Objects
             else return new Tuple<string, string>("", "Error");
         }
 
-        public override string CancelOrder(string OrderId, string MarketId)
+        public override string CancelOrder(ActiveOrder orderObj)
         {
             string json = String.Empty;
             if (ApiActive && HasKeys)
@@ -244,7 +244,7 @@ namespace Objects
                 {
                     {"method", "market"},
                     {"command", "cancel"},
-                    {"uuid", OrderId}
+                    {"uuid", orderObj.OrderId}
                 };
 
                 json = AuthenticatedRequest(paramList);
@@ -253,11 +253,11 @@ namespace Objects
                     var jTok = JObject.Parse(json);
                     if ((bool)jTok["success"])
                     {
-                        return OrderId + " has been canceled.";
+                        return orderObj.OrderId + " has been canceled.";
                     }
                     else
                     {
-                        return "Error canceling " + OrderId + " : " + (string)jTok["message"];
+                        return "Error canceling " + orderObj.OrderId + " : " + (string)jTok["message"];
                     }
                 }
                 catch (Newtonsoft.Json.JsonReaderException) { return json; }

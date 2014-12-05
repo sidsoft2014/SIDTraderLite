@@ -145,7 +145,7 @@
             this.ApiIndicator_BTCe = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Cryptsy = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Kraken = new System.Windows.Forms.ToolStripButton();
-            this.ApiIndicator_MintPal = new System.Windows.Forms.ToolStripButton();
+            this.ApiIndicator_BitCoinCoId = new System.Windows.Forms.ToolStripButton();
             this.ApiIndicator_Poloniex = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer_Main.BottomToolStripPanel.SuspendLayout();
             this.toolStripContainer_Main.ContentPanel.SuspendLayout();
@@ -1424,15 +1424,15 @@
             // 
             this.toolStrip_Apis.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip_Apis.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ApiIndicator_BitCoinCoId,
             this.ApiIndicator_Bittrex,
             this.ApiIndicator_BTCe,
             this.ApiIndicator_Cryptsy,
             this.ApiIndicator_Kraken,
-            this.ApiIndicator_MintPal,
             this.ApiIndicator_Poloniex});
             this.toolStrip_Apis.Location = new System.Drawing.Point(38, 0);
             this.toolStrip_Apis.Name = "toolStrip_Apis";
-            this.toolStrip_Apis.Size = new System.Drawing.Size(150, 25);
+            this.toolStrip_Apis.Size = new System.Drawing.Size(181, 25);
             this.toolStrip_Apis.TabIndex = 1;
             // 
             // ApiIndicator_Bittrex
@@ -1479,16 +1479,16 @@
             this.ApiIndicator_Kraken.ToolTipText = "Force Update (Kraken)";
             this.ApiIndicator_Kraken.Click += new System.EventHandler(this.ApiIndicator_Kraken_Click);
             // 
-            // ApiIndicator_MintPal
+            // ApiIndicator_BitCoinCoId
             // 
-            this.ApiIndicator_MintPal.BackColor = System.Drawing.Color.Tomato;
-            this.ApiIndicator_MintPal.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.ApiIndicator_MintPal.Image = global::Objects.Properties.Resources.MintPal;
-            this.ApiIndicator_MintPal.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.ApiIndicator_MintPal.Name = "ApiIndicator_MintPal";
-            this.ApiIndicator_MintPal.Size = new System.Drawing.Size(23, 22);
-            this.ApiIndicator_MintPal.ToolTipText = "[Not supported in this version]";
-            this.ApiIndicator_MintPal.Click += new System.EventHandler(this.ApiIndicator_MintPal_Click);
+            this.ApiIndicator_BitCoinCoId.BackColor = System.Drawing.Color.Tomato;
+            this.ApiIndicator_BitCoinCoId.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.ApiIndicator_BitCoinCoId.Image = global::Objects.Properties.Resources.coId;
+            this.ApiIndicator_BitCoinCoId.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.ApiIndicator_BitCoinCoId.Name = "ApiIndicator_BitCoinCoId";
+            this.ApiIndicator_BitCoinCoId.Size = new System.Drawing.Size(23, 22);
+            this.ApiIndicator_BitCoinCoId.ToolTipText = "Force Update (BitcoinCoId)";
+            this.ApiIndicator_BitCoinCoId.Click += new System.EventHandler(this.ApiIndicator_BitCoinCoId_Click);
             // 
             // ApiIndicator_Poloniex
             // 
@@ -1646,7 +1646,7 @@
         private System.Windows.Forms.ToolStripButton ApiIndicator_BTCe;
         private System.Windows.Forms.ToolStripButton ApiIndicator_Cryptsy;
         private System.Windows.Forms.ToolStripButton ApiIndicator_Kraken;
-        private System.Windows.Forms.ToolStripButton ApiIndicator_MintPal;
+        private System.Windows.Forms.ToolStripButton ApiIndicator_BitCoinCoId;
         private System.Windows.Forms.ToolStripButton ApiIndicator_Poloniex;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.ListView listView1;

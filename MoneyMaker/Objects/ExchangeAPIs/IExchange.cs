@@ -189,7 +189,7 @@ namespace Objects
         /// <param name="OrderId">Order id to cancel</param>
         /// <param name="MarketId">Market order is in</param>
         /// <returns>Result message</returns>
-        public abstract string CancelOrder(string OrderId, string MarketId);
+        public abstract string CancelOrder(ActiveOrder orderObj);
         
         internal async Task<string> WebClientController(string url)
         {

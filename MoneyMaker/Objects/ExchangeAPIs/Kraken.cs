@@ -375,11 +375,11 @@ namespace Objects
 
             return tp;
         }
-        public override string CancelOrder(string OrderId = null, string MarketId = null)
+        public override string CancelOrder(ActiveOrder orderObj)
         {
             if (HasKeys)
             {
-                string req = string.Format("&txid={0}", OrderId);
+                string req = string.Format("&txid={0}", orderObj.OrderId);
                 var json = AuthenticatedRequest("CancelOrder", req);
                 var jObj = JObject.Parse(json);
                 var isError = jObj.GetValue("error");
@@ -390,7 +390,7 @@ namespace Objects
                 }
                 else
                 {
-                    return string.Format("Order {0} cancelled", OrderId);
+                    return string.Format("Order {0} cancelled", orderObj.OrderId);
                 }
             }
             else
